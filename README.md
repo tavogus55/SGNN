@@ -27,10 +27,13 @@ hyzhang98@gmail.com
 
 ## Requirements 
 
-- pytorch 1.10.0
+- torch 1.10.0
 - scipy 1.3.1
 - scikit-learn 0.21.3
 - numpy 1.16.5
+- networkx 2.3
+- munkres 
+- 
 
 
 
@@ -106,69 +109,12 @@ layers = [
 
 ### Node Clustering
 
-
-
-#### Cora
-
-- mask_rate = 0.2
-- overlook_rates=None
-- layers=[128, 64,32]
-- max_iter=200
-- batch=128
-- BP_count=10
-- learning_rate=10^-3
-- lam=10^-6
-- eta=1, loss = loss1 / sample_size
-
-
-
-### Pubmed
-
-- mask_rate = 0.2
-- overlook_rates=None
-- layers=[256, 128]
-- max_iter=100
-- batch=4096
-- BP_count=10
-- learning_rate=10^-4 !
-- lam=10^-6
-- order=2
-
-- eta=10, loss = loss1 
-- AU -> relu
-- activation  -> leaky_relu=5 
-
-### Citeseer
-
-- mask_rate = 0.2
-- overlook_rates=None
-- layers=[256, 128]
-- max_iter=200
-- batch=256
-- BP_count=5
-- learning_rate=10^-4 !
-- lam=10^-6
-- eta=10, loss = loss1 
-- order=2
-- AU -> leaky relu slope=0.2
-- activation ->linear
-
-
-
-### Reddit 
-
-- mask_rate = 0.2
-- overlook_rates=None
-- layers=[128, 64]
-- max_iter=10000
-- batch=512
-- BP_count=5
-- learning_rate=10^-4 !
-- lam=10^-6
-- eta=10, loss = loss1 
-- order=2
-- AU -> relu
-- activation ->linear
+| Dataset   | mask_rate | overlook_rates | layers         | max_iter | batch | BP_count | learning_rate | lam     | eta  | loss                | order | AU                        | activation             |
+|-----------|-----------|----------------|----------------|----------|-------|----------|---------------|---------|------|---------------------|-------|--------------------------|------------------------|
+| **Cora**  | 0.2       | None           | [128, 64, 32]  | 200      | 128   | 10       | 10^-3         | 10^-6   | 1    | loss1 / sample_size | -     | -                        | -                      |
+| **Pubmed**| 0.2       | None           | [256, 128]     | 100      | 4096  | 10       | 10^-4         | 10^-6   | 10   | loss1               | 2     | relu                     | leaky_relu=5           |
+| **Citeseer**| 0.2     | None           | [256, 128]     | 200      | 256   | 5        | 10^-4         | 10^-6   | 10   | loss1               | 2     | leaky_relu slope=0.2     | linear                 |
+| **Reddit**| 0.2       | None           | [128, 64]      | 10000    | 512   | 5        | 10^-4         | 10^-6   | 10   | loss1               | 2     | relu                     | linear                 |
 
 ## Citation
 ```
