@@ -4,11 +4,35 @@ import scipy.io as scio
 import pickle as pkl
 import networkx as nx
 import sys
+from ogb.nodeproppred import PygNodePropPredDataset
+from torch_geometric.utils import to_scipy_sparse_matrix
+import numpy as np
 
 
 YALE = 'Yale'
 UMIST = 'UMIST'
 THREE_RINGS = 'three_rings'
+
+def load_ogbn_arxiv():
+    # Load the OGBN-Arxiv dataset
+    dataset_name = 'ogbn-arxiv'
+    dataset = PygNodePropPredDataset(name=dataset_name, root='data/')
+    data = dataset[0]  # Get the graph data object
+    split_idx = dataset.get_idx_split()  # Get train/val/test splits
+
+    # Adjacency matrix
+    full_adj = to_scipy_sparse_matrix(data.edge_index, num_nodes=data.num_nodes)
+
+    # Features (node features)
+    features = data.x.numpy()  # Convert PyTorch tensor to numpy array
+
+    # Labels
+    labels = data.y.squeeze().numpy()  # Convert to 1D array
+
+    # Train/validation/test indices
+    train_index = split_idx['train']
+    val_index = split_idx['valid']
+    test_index = split_idx['test']
 
 
 def load_cora():
@@ -73,13 +97,17 @@ def load_citeseer_from_mat():
     print('Loading from raw data file...')
     data = scio.loadmat('data/citeseer.mat')
     adj = data['W']
-    # adj = adj - adj.diagonal()
     features = data['fea']
-    # adj = sp.coo_matrix(adj)
     labels = data['gnd']
     labels = np.reshape(labels, (labels.shape[0],))
-    adj = adj.T + adj
+
+    # Convert adjacency to sparse matrix
+    adj = sp.coo_matrix(adj)
+
+    # Ensure symmetry and convert to binary (0 or 1)
+    adj = adj + adj.T
     adj = adj.minimum(1)
+
     return features, adj.tocsr(), labels
 
 

@@ -1,0 +1,77 @@
+{
+    "Node Clustering": {
+        "Cora": {
+            "mask_rate": 0.2,
+            "overlook_rates": null,
+            "layers": [
+                128,
+                64,
+                32
+            ],
+            "max_iter": 100,
+            "batch": 128,
+            "BP_count": 10,
+            "learning_rate": "10^-3",
+            "lam": "10^-6",
+            "eta": 1,
+            "loss": "loss1 / sample_size",
+            "negative_slope": 0.2
+        },
+        "PubMed": {
+            "mask_rate": 0.2,
+            "overlook_rates": null,
+            "layers": [
+                256,
+                128
+            ],
+            "max_iter": 100,
+            "batch": 4096,
+            "BP_count": 10,
+            "learning_rate": "10^-4",
+            "lam": "10^-6",
+            "order": 2,
+            "eta": 10,
+            "loss": "loss1",
+            "AU": "relu",
+            "activation": "leaky_relu=5",
+            "negative_slope": 5
+        },
+        "Citeseer": {
+            "mask_rate": 0.2,
+            "overlook_rates": null,
+            "layers": [
+                256,
+                128
+            ],
+            "max_iter": 100,
+            "batch": 256,
+            "BP_count": 5,
+            "learning_rate": "10^-4",
+            "lam": "10^-6",
+            "eta": 10,
+            "loss": "loss1",
+            "order": 2,
+            "AU": "leaky_relu slope=0.2",
+            "activation": "linear",
+            "negative_slope": 0.2
+        },
+        "Reddit": {
+            "mask_rate": 0.2,
+            "overlook_rates": null,
+            "layers": [
+                128,
+                64
+            ],
+            "max_iter": 10000,
+            "batch": 512,
+            "BP_count": 5,
+            "learning_rate": "10^-4",
+            "lam": "10^-6",
+            "eta": 10,
+            "loss": "loss1",
+            "order": 2,
+            "AU": "relu",
+            "activation": "linear"
+        }
+    }
+}

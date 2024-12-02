@@ -4,15 +4,57 @@ from data_loader import *
 import warnings
 import scipy.io as scio
 import utils
-
+import json
+from datetime import datetime
 
 warnings.filterwarnings('ignore')
 utils.set_seed(0)
+
+
+print(torch.version.cuda)  # Check the CUDA version supported by PyTorch
+print(torch.cuda.is_available())  # Check if CUDA is detected
+print(torch.version.__version__)  # Check PyTorch version
+
+
+decision = input("Choose which dataset to use\n1. Cora\n2. Citeseer\n3. Pubmed\n\nYour input: ")
+dataset_name = None
+
+if decision == "1":
+    dataset_name = "Cora"
+    features, _, adjacency, labels = load_cora()
+elif decision == "2":
+    dataset_name = "Citeseer"
+    features, adjacency, labels = load_citeseer_from_mat()
+elif decision == "3":
+    dataset_name = "PubMed"
+    features, adjacency, labels = load_pubmed()
+else:
+    print("Invalid")
+    exit()
+
+# Load the JSON settings
+with open('config.json', 'r') as file:
+    settings = json.load(file)
+config = settings["Node Clustering"][dataset_name]
+
+mask_rate = config["mask_rate"]
+overlook_rates = config["overlook_rates"]
+layers = config["layers"]
+max_iter = config["max_iter"]
+batch_size = config["batch"]
+BP_count = config["BP_count"]
+learning_rate = eval(config["learning_rate"].replace("^", "**"))
+lam = eval(config["lam"].replace("^", "**"))
+eta = config["eta"]
+loss = config["loss"]
+negative_slope = config["negative_slope"]
+
+
 # ========== load data ==========
 # features, _, adjacency, labels = load_cora()
 # features, _, adjacency, labels = load_citeseer()
 # features, adjacency, labels = load_citeseer_from_mat()
-features, adjacency, labels = load_pubmed()
+# features, adjacency, labels = load_pubmed()
 n_clusters = np.unique(labels).shape[0]
 if type(features) is not np.ndarray:
     features = features.todense()
@@ -21,9 +63,6 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # ========== training setting ==========
 features = features.to(device)
-learning_rate = 10**-4
-max_iter = 100
-batch_size = 4096
 
 # ========== layers setting ==========
 # layers = [32, 16]
@@ -32,20 +71,30 @@ batch_size = 4096
 
 relu_func = Func(torch.nn.functional.relu)
 linear_func = Func(None)
-leaky_relu_func = Func(torch.nn.functional.leaky_relu, negative_slope=0.2)
+leaky_relu_func = Func(torch.nn.functional.leaky_relu, negative_slope=negative_slope)
 
 
-lam = 10**-6
-
-
-layers = [
-    LayerParam(256, inner_act=leaky_relu_func, act=linear_func, gnn_type=LayerParam.GAE,
-               mask_rate=0.2, lam=lam, max_iter=max_iter, learning_rate=learning_rate,
-               batch_size=batch_size),
-    LayerParam(128, inner_act=leaky_relu_func, act=linear_func, gnn_type=LayerParam.GAE,
-               mask_rate=0.2, lam=lam, max_iter=max_iter, learning_rate=learning_rate,
-               batch_size=batch_size,order=2),
-]
+if dataset_name == "PubMed" or dataset_name == "Citeseer":
+    layers = [
+        LayerParam(layers[0], inner_act=linear_func, act=leaky_relu_func, gnn_type=LayerParam.GAE,
+                   mask_rate=mask_rate, lam=lam, max_iter=max_iter, learning_rate=learning_rate,
+                   batch_size=batch_size),
+        LayerParam(layers[1], inner_act=linear_func, act=linear_func, gnn_type=LayerParam.GAE,
+                   mask_rate=mask_rate, lam=lam, max_iter=max_iter, learning_rate=learning_rate,
+                   batch_size=batch_size),
+    ]
+else:
+    layers = [
+        LayerParam(layers[0], inner_act=linear_func, act=leaky_relu_func, gnn_type=LayerParam.GAE,
+                   mask_rate=mask_rate, lam=lam, max_iter=max_iter, learning_rate=learning_rate,
+                   batch_size=batch_size),
+        LayerParam(layers[1], inner_act=linear_func, act=leaky_relu_func, gnn_type=LayerParam.GAE,
+                   mask_rate=mask_rate, lam=lam, max_iter=max_iter, learning_rate=learning_rate,
+                   batch_size=batch_size),
+        LayerParam(layers[2], inner_act=linear_func, act=linear_func, gnn_type=LayerParam.GAE,
+                   mask_rate=mask_rate, lam=lam, max_iter=max_iter, learning_rate=learning_rate,
+                   batch_size=batch_size),
+    ]
 
 
 
@@ -53,12 +102,12 @@ layers = [
 overlook_rates = None
 
 sgae = StackedGNN(features, adjacency, layers,
-                  overlooked_rates=overlook_rates, BP_count=5,
-                  eta=10**-5, device=device,
+                  overlooked_rates=overlook_rates, BP_count=BP_count,
+                  eta=eta, device=device,
                   labels=labels, metric_func=utils.clustering)
 
 utils.print_SGNN_info(sgae)
-
+start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 print('============ Start Training ============')
 embedding = sgae.run()
 print('============ End Training ============')
@@ -68,3 +117,6 @@ utils.print_SGNN_info(sgae)
 # ========== Clustering ==========
 print('============ Start Clustering ============')
 utils.clustering_tensor(embedding.detach(), labels, relaxed_kmeans=True)
+finish_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+print(f"Start Time: {start_time}")
+print(f"Finish Time: {finish_time}")

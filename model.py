@@ -4,7 +4,7 @@ import utils
 import scipy.sparse as sp
 import math
 import scipy.io as scio
-from gat import GraphAttentionLayer
+# from gat import GraphAttentionLayer
 
 
 RIDGE = 0

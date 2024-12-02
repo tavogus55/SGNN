@@ -18,14 +18,70 @@
 import json
 import time
 
+import pandas as pd
 from networkx.readwrite import json_graph
 import numpy as np
 import scipy.sparse as sp
 import sklearn.metrics
 import sklearn.preprocessing
-import tensorflow.compat.v1 as tf
-from tensorflow.compat.v1 import gfile
+# import tensorflow.compat.v1 as tf
+# from tensorflow.compat.v1 import gfile
 import torch
+from ogb.nodeproppred import PygNodePropPredDataset
+from torch_geometric.utils import to_scipy_sparse_matrix
+
+def load_ogbn_arxiv():
+    # Load the OGBN-Arxiv dataset
+    dataset_name = 'ogbn-arxiv'
+    dataset = PygNodePropPredDataset(name=dataset_name, root='data/')
+    data = dataset[0]  # Get the graph data object
+    split_idx = dataset.get_idx_split()  # Get train/val/test splits
+
+    # Adjacency matrix
+    full_adj = to_scipy_sparse_matrix(data.edge_index, num_nodes=data.num_nodes)
+
+    # Features (node features)
+    features = data.x.numpy()  # Convert PyTorch tensor to numpy array
+
+    # Labels
+    labels = data.y.squeeze().numpy()  # Convert to 1D array
+
+    # Train/validation/test indices
+    train_index = split_idx['train']
+    val_index = split_idx['valid']
+    test_index = split_idx['test']
+
+    print(f"Loaded OGBN-Arxiv dataset:")
+    print(f"Number of nodes: {data.num_nodes}")
+    print(f"Number of edges: {data.edge_index.shape[1]}")
+    print(f"Feature matrix shape: {features.shape}")
+    print(f"Labels shape: {labels.shape}")
+    print(f"Train indices: {len(train_index)}")
+    print(f"Validation indices: {len(val_index)}")
+    print(f"Test indices: {len(test_index)}")
+
+    return full_adj, features, labels, train_index, val_index, test_index
+
+
+
+def normalize_features(features):
+    """Row-normalize feature matrix."""
+    row_sum = np.array(features.sum(1))
+    row_inv = np.power(row_sum, -1).flatten()
+    row_inv[np.isinf(row_inv)] = 0.0
+    row_matrix_inv = sp.diags(row_inv)
+    features = row_matrix_inv.dot(features)
+    return features
+
+
+def preprocess_adj(adj):
+    """Preprocess adjacency matrix for GCN-based models."""
+    adj = adj + sp.eye(adj.shape[0])
+    row_sum = np.array(adj.sum(1)).flatten()
+    d_inv_sqrt = np.power(row_sum, -0.5)
+    d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.0
+    d_mat_inv_sqrt = sp.diags(d_inv_sqrt)
+    return d_mat_inv_sqrt.dot(adj).dot(d_mat_inv_sqrt)
 
 
 def parse_index_file(filename):
@@ -153,116 +209,141 @@ def preprocess_multicluster(adj,
         train_mask_batches.append(sample_mask(train_pt, len(pt)))
     return (features_batches, support_batches, y_train_batches,
             train_mask_batches)
-
-
-def load_graphsage_data(dataset_str, normalize=True):
-    """Load GraphSAGE data."""
-    start_time = time.time()
-    dataset_path = 'data'
-
-    graph_json = json.load(
-        gfile.Open('{}/{}/{}-G.json'.format(dataset_path, dataset_str,
-                                            dataset_str)))
-    graph_nx = json_graph.node_link_graph(graph_json)
-
-    id_map = json.load(
-        gfile.Open('{}/{}/{}-id_map.json'.format(dataset_path, dataset_str,
-                                                 dataset_str)))
-    is_digit = list(id_map.keys())[0].isdigit()
-    id_map = {(int(k) if is_digit else k): int(v) for k, v in id_map.items()}
-    class_map = json.load(
-        gfile.Open('{}/{}/{}-class_map.json'.format(dataset_path, dataset_str,
-                                                    dataset_str)))
-
-    is_instance = isinstance(list(class_map.values())[0], list)
-    class_map = {(int(k) if is_digit else k): (v if is_instance else int(v))
-                 for k, v in class_map.items()}
-
-    broken_count = 0
-    to_remove = []
-    for node in graph_nx.nodes():
-        if node not in id_map:
-            to_remove.append(node)
-            broken_count += 1
-    for node in to_remove:
-        graph_nx.remove_node(node)
-    tf.logging.info(
-        'Removed %d nodes that lacked proper annotations due to networkx versioning issues',
-        broken_count)
-
-    feats = np.load(
-        gfile.Open(
-            '{}/{}/{}-feats.npy'.format(dataset_path, dataset_str, dataset_str),
-            'rb')).astype(np.float32)
-
-    tf.logging.info('Loaded data (%f seconds).. now preprocessing..',
-                    time.time() - start_time)
-    start_time = time.time()
-
-    edges = []
-    for edge in graph_nx.edges():
-        if edge[0] in id_map and edge[1] in id_map:
-            edges.append((id_map[edge[0]], id_map[edge[1]]))
-    num_data = len(id_map)
-
-    val_data = np.array(
-        [id_map[n] for n in graph_nx.nodes() if graph_nx.node[n]['val']],
-        dtype=np.int32)
-    test_data = np.array(
-        [id_map[n] for n in graph_nx.nodes() if graph_nx.node[n]['test']],
-        dtype=np.int32)
-    is_train = np.ones((num_data), dtype=np.bool)
-    is_train[val_data] = False
-    is_train[test_data] = False
-    train_data = np.array([n for n in range(num_data) if is_train[n]],
-                          dtype=np.int32)
-
-    train_edges = [
-        (e[0], e[1]) for e in edges if is_train[e[0]] and is_train[e[1]]
-    ]
-    edges = np.array(edges, dtype=np.int32)
-    train_edges = np.array(train_edges, dtype=np.int32)
-
-    # Process labels
-    if isinstance(list(class_map.values())[0], list):
-        num_classes = len(list(class_map.values())[0])
-        labels = np.zeros((num_data, num_classes), dtype=np.float32)
-        for k in class_map.keys():
-            labels[id_map[k], :] = np.array(class_map[k])
-    else:
-        num_classes = len(set(class_map.values()))
-        labels = np.zeros((num_data, num_classes), dtype=np.float32)
-        for k in class_map.keys():
-            labels[id_map[k], class_map[k]] = 1
-
-    if normalize:
-        train_ids = np.array([
-            id_map[n]
-            for n in graph_nx.nodes()
-            if not graph_nx.node[n]['val'] and not graph_nx.node[n]['test']
-        ])
-        train_feats = feats[train_ids]
-        scaler = sklearn.preprocessing.StandardScaler()
-        scaler.fit(train_feats)
-        feats = scaler.transform(feats)
-
-    def _construct_adj(edges):
-        adj = sp.csr_matrix((np.ones(
-            (edges.shape[0]), dtype=np.float32), (edges[:, 0], edges[:, 1])),
-            shape=(num_data, num_data))
-        adj += adj.transpose()
-        return adj
-
-    train_adj = _construct_adj(train_edges)
-    full_adj = _construct_adj(edges)
-
-    train_feats = feats[train_data]
-    test_feats = feats
-    labels = np.argmax(labels, 1)
-    labels = labels.reshape((labels.shape[0],))
-
-    tf.logging.info('Data loaded, %f seconds.', time.time() - start_time)
-    return num_data, train_adj, full_adj, feats, train_feats, test_feats, labels, train_data, val_data, test_data
+#
+#
+# def load_graphsage_data(dataset_str, normalize=True):
+#     """Load GraphSAGE data."""
+#     start_time = time.time()
+#     dataset_path = 'data'
+#
+#     graph_json = json.load(
+#         gfile.Open('{}/{}/{}-G.json'.format(dataset_path, dataset_str,
+#                                             dataset_str)))
+#
+#     print(f"Number of nodes in graph_json: {len(graph_json.get('nodes', []))}")
+#     print(f"Number of edges in graph_json: {len(graph_json.get('links', []))}")
+#
+#     graph_nx = json_graph.node_link_graph(graph_json)
+#
+#     print(f"Number of nodes in graph_nx: {len(graph_nx.nodes())}")
+#     print(f"Number of edges in graph_nx: {len(graph_nx.edges())}")
+#
+#     id_map = json.load(
+#         gfile.Open('{}/{}/{}-id_map.json'.format(dataset_path, dataset_str,
+#                                                  dataset_str)))
+#     is_digit = list(id_map.keys())[0].isdigit()
+#     id_map = {(int(k) if is_digit else k): int(v) for k, v in id_map.items()}
+#
+#     print(f"Number of nodes in id_map: {len(id_map)}")
+#     print(f"First 10 entries in id_map: {list(id_map.items())[:10]}")
+#
+#     class_map = json.load(
+#         gfile.Open('{}/{}/{}-class_map.json'.format(dataset_path, dataset_str,
+#                                                     dataset_str)))
+#
+#     is_instance = isinstance(list(class_map.values())[0], list)
+#     class_map = {(int(k) if is_digit else k): (v if is_instance else int(v))
+#                  for k, v in class_map.items()}
+#
+#     broken_count = 0
+#     to_remove = []
+#     for node in graph_nx.nodes():
+#         if node not in id_map:
+#             to_remove.append(node)
+#             broken_count += 1
+#     for node in to_remove:
+#         graph_nx.remove_node(node)
+#     tf.logging.info(
+#         'Removed %d nodes that lacked proper annotations due to networkx versioning issues',
+#         broken_count)
+#
+#     feats = np.load(
+#         gfile.Open(
+#             '{}/{}/{}-feats.npy'.format(dataset_path, dataset_str, dataset_str),
+#             'rb')).astype(np.float32)
+#
+#     tf.logging.info('Loaded data (%f seconds).. now preprocessing..',
+#                     time.time() - start_time)
+#     start_time = time.time()
+#
+#     print(f"Number of nodes in graph_json: {len(graph_json.get('nodes', []))}")
+#     print(f"Number of edges in graph_json: {len(graph_json.get('links', []))}")
+#     print(f"Number of nodes in graph_nx: {len(graph_nx.nodes())}")
+#     print(f"Number of edges in graph_nx: {len(graph_nx.edges())}")
+#     print(f"Number of nodes in id_map: {len(id_map)}")
+#     print(f"First 10 entries in id_map: {list(id_map.items())[:10]}")
+#
+#     reversed_id_map = {v: k for k, v in id_map.items()}
+#
+#     edges = []
+#     for edge in graph_nx.edges():
+#         if edge[0] in id_map and edge[1] in id_map:
+#             edges.append((id_map[edge[0]], id_map[edge[1]]))
+#     num_data = len(id_map)
+#
+#     val_data = np.array(
+#         [id_map[n] for n in graph_nx.nodes() if graph_nx.node[n]['val']],
+#         dtype=np.int32)
+#     test_data = np.array(
+#         [id_map[n] for n in graph_nx.nodes() if graph_nx.node[n]['test']],
+#         dtype=np.int32)
+#     is_train = np.ones((num_data), dtype=np.bool)
+#     is_train[val_data] = False
+#     is_train[test_data] = False
+#     train_data = np.array([n for n in range(num_data) if is_train[n]],
+#                           dtype=np.int32)
+#
+#     train_edges = [
+#         (e[0], e[1]) for e in edges if is_train[e[0]] and is_train[e[1]]
+#     ]
+#     edges = np.array(edges, dtype=np.int32)
+#     train_edges = np.array(train_edges, dtype=np.int32)
+#
+#     # Process labels
+#     if isinstance(list(class_map.values())[0], list):
+#         num_classes = len(list(class_map.values())[0])
+#         labels = np.zeros((num_data, num_classes), dtype=np.float32)
+#         for k in class_map.keys():
+#             labels[id_map[k], :] = np.array(class_map[k])
+#     else:
+#         num_classes = len(set(class_map.values()))
+#         labels = np.zeros((num_data, num_classes), dtype=np.float32)
+#         for k in class_map.keys():
+#             labels[id_map[k], class_map[k]] = 1
+#
+#     if normalize:
+#         train_ids = np.array([
+#             id_map[n]
+#             for n in graph_nx.nodes()
+#             if not graph_nx.node[n]['val'] and not graph_nx.node[n]['test']
+#         ])
+#         train_feats = feats[train_ids]
+#         scaler = sklearn.preprocessing.StandardScaler()
+#         scaler.fit(train_feats)
+#         feats = scaler.transform(feats)
+#
+#     def _construct_adj(edges, num_data):
+#         if len(edges) == 0:
+#             print("Warning: No edges found. Returning an empty adjacency matrix.")
+#             return sp.csr_matrix((num_data, num_data), dtype=np.float32)
+#
+#         adj = sp.csr_matrix(
+#             (np.ones((edges.shape[0]), dtype=np.float32), (edges[:, 0], edges[:, 1])),
+#             shape=(num_data, num_data)
+#         )
+#         adj += adj.transpose()
+#         return adj
+#
+#     train_adj = _construct_adj(train_edges, num_data)
+#     full_adj = _construct_adj(edges, num_data)
+#
+#     train_feats = feats[train_data]
+#     test_feats = feats
+#     labels = np.argmax(labels, 1)
+#     labels = labels.reshape((labels.shape[0],))
+#
+#     tf.logging.info('Data loaded, %f seconds.', time.time() - start_time)
+#     return num_data, train_adj, full_adj, feats, train_feats, test_feats, labels, train_data, val_data, test_data
 
 
 def sparse_mx_to_torch_sparse_tensor(sparse_mx):
@@ -276,11 +357,23 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
 
 
 def loadRedditFromNPZ(dataset_dir):
-    adj = sp.load_npz(dataset_dir + "reddit_adj.npz")
-    data = np.load(dataset_dir + "reddit.npz")
+    # Load adjacency matrix
+    adj = sp.load_npz(dataset_dir + "reddit_graph.npz")
 
-    return adj, data['feats'], data['y_train'], data['y_val'], data['y_test'], data['train_index'], data['val_index'], \
-           data['test_index']
+    # Load data from reddit_data.npz
+    data = np.load(dataset_dir + "reddit_data.npz", allow_pickle=True)
+
+    # Extract features and labels
+    features = data['feature']  # Assuming 'feature' corresponds to node features
+    labels = data['label']  # Assuming 'label' corresponds to node labels
+
+    # Assign dummy train, val, and test indices (adjust based on your needs)
+    num_nodes = features.shape[0]
+    train_index = np.arange(int(0.6 * num_nodes))  # 60% of nodes for training
+    val_index = np.arange(int(0.6 * num_nodes), int(0.8 * num_nodes))  # 20% for validation
+    test_index = np.arange(int(0.8 * num_nodes), num_nodes)  # 20% for testing
+
+    return adj, features, labels, train_index, val_index, test_index
 
 
 def load_reddit_data(normalization="AugNormAdj", cuda=True):
