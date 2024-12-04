@@ -11,7 +11,7 @@ warnings.filterwarnings('ignore')
 utils.set_seed(0)
 # ========== load data ==========
 dataset = 'cora'
-adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset)
+adjacency, features, labels, train_mask, val_mask, test_mask = load_cora()
 # train_mask = np.array([True]*features.shape[0])
 # features, adjacency, labels = load_citeseer_from_mat()
 # features, adjacency, labels = load_pubmed()
@@ -20,6 +20,14 @@ if type(features) is not np.ndarray:
     features = features.todense()
 features = torch.Tensor(features)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+features = torch.Tensor(features.toarray() if sp.issparse(features) else features).to(device)
+adjacency = adjacency.to(device)
+labels = torch.tensor(labels).long().to(device)
+train_mask = torch.tensor(train_mask).to(device)
+val_mask = torch.tensor(val_mask).to(device)
+test_mask = torch.tensor(test_mask).to(device)
+
+
 
 # ========== training setting ==========
 features = features.to(device)
@@ -45,11 +53,11 @@ tanh = Func(torch.nn.functional.tanh)
 
 layers = [
     LayerParam(128, inner_act=linear_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
-               learning_rate=10**-2, order=1, max_iter=20, lam=10**-3, batch_size=2708),
+               learning_rate=10**-2, order=1, max_iter=60, lam=10**-3, batch_size=2708),
     LayerParam(64, inner_act=linear_func, act=relu_func, gnn_type=LayerParam.EGCN,
-               learning_rate=10**-2, order=1, max_iter=20, lam=10**-3, batch_size=2708),
+               learning_rate=10**-2, order=1, max_iter=60, lam=10**-3, batch_size=2708),
     LayerParam(32, inner_act=linear_func, act=linear_func, gnn_type=LayerParam.EGCN,
-               learning_rate=0.01, order=2, max_iter=20, lam=10**-3, batch_size=140),
+               learning_rate=0.01, order=2, max_iter=60, lam=10**-3, batch_size=140),
 ]
 
 # layers = [

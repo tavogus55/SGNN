@@ -8,7 +8,7 @@ from datetime import datetime
 
 warnings.filterwarnings('ignore')
 # ========== load data ==========
-adj, feats, labels, train_index, val_index, test_index = load_ogbn_arxiv()
+adj, feats, labels, train_index, val_index, test_index = loadRedditFromNPZ('data/')
 
 # Additional variables
 num_data = feats.shape[0]
@@ -42,9 +42,9 @@ leaky_relu_func = Func(torch.nn.functional.leaky_relu, negative_slope=0.2)
 lam = 10**-6
 
 layers = [
-    LayerParam(128, inner_act=leaky_relu_func, act=linear_func, gnn_type=LayerParam.GAE,
+    LayerParam(128, inner_act=linear_func, act=leaky_relu_func, gnn_type=LayerParam.GAE,
                mask_rate=0.2, learning_rate=learning_rate, lam=lam, max_iter=max_iter, batch_size=batch_size),
-    LayerParam(64, inner_act=leaky_relu_func, act=linear_func, gnn_type=LayerParam.GAE,
+    LayerParam(64, inner_act=linear_func, act=linear_func, gnn_type=LayerParam.GAE,
                mask_rate=0.2, learning_rate=learning_rate, lam=lam, max_iter=max_iter, batch_size=batch_size),
 ]
 

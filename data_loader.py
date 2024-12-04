@@ -39,19 +39,44 @@ def load_cora():
     path = 'data/cora/'
     data_name = 'cora'
     print('Loading from raw data file...')
-    idx_features_labels = np.genfromtxt("{}{}.content".format(path, data_name), dtype=np.dtype(str))
+
+    # Load node features and labels
+    idx_features_labels = np.genfromtxt(f"{path}{data_name}.content", dtype=np.dtype(str))
     features = sp.csr_matrix(idx_features_labels[:, 1:-1], dtype=np.float32)
     _, _, labels = np.unique(idx_features_labels[:, -1], return_index=True, return_inverse=True)
 
+    # Map node IDs to indices
     idx = np.array(idx_features_labels[:, 0], dtype=np.int32)
     idx_map = {j: i for i, j in enumerate(idx)}
-    edges_unordered = np.genfromtxt("{}{}.cites".format(path, data_name), dtype=np.int32)
+
+    # Load edges and build adjacency matrix
+    edges_unordered = np.genfromtxt(f"{path}{data_name}.cites", dtype=np.int32)
     edges = np.array(list(map(idx_map.get, edges_unordered.flatten())), dtype=np.int32).reshape(edges_unordered.shape)
-    adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])), shape=(labels.shape[0], labels.shape[0]),
-                        dtype=np.float32)
+    adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
+                        shape=(labels.shape[0], labels.shape[0]), dtype=np.float32)
     adj = adj.T + adj
     adj = adj.minimum(1)
-    return features, idx_map, adj, labels
+
+    # Split data into train/val/test and create masks
+    num_nodes = labels.shape[0]
+    train_size = int(num_nodes * 0.6)  # 60% for training
+    val_size = int(num_nodes * 0.2)  # 20% for validation
+    test_size = num_nodes - train_size - val_size  # 20% for testing
+
+    indices = np.random.permutation(num_nodes)
+    train_idx = indices[:train_size]
+    val_idx = indices[train_size:train_size + val_size]
+    test_idx = indices[train_size + val_size:]
+
+    train_mask = np.zeros(num_nodes, dtype=bool)
+    val_mask = np.zeros(num_nodes, dtype=bool)
+    test_mask = np.zeros(num_nodes, dtype=bool)
+
+    train_mask[train_idx] = True
+    val_mask[val_idx] = True
+    test_mask[test_idx] = True
+
+    return adj, features, labels, train_mask, val_mask, test_mask
 
 
 def load_citeseer():
