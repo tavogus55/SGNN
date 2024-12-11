@@ -27,14 +27,20 @@ hyzhang98@gmail.com
 
 ## Requirements 
 
-- torch 1.10.0
-- scipy 1.3.1
-- scikit-learn 0.21.3
-- numpy 1.16.5
-- networkx 2.3
-- munkres 
-- 
 
+```
+conda create --name SGNN-geometric-revised python=3.7
+conda activate SGNN-geometric-revised
+pip install tensorflow==2.1.0
+pip install networkx==1.11
+pip install scikit-learn==0.21.3
+pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1+cu117 -f https://download.pytorch.org/whl/torch_stable.html
+pip install torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-1.13.1+cu117.html
+pip install torch-geometric
+pip install munkres
+pip install ogb 
+pip install protobuf==3.20.3
+```
 
 
 ## How to run SGNN
