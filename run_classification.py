@@ -11,7 +11,7 @@ warnings.filterwarnings('ignore')
 utils.set_seed(0)
 # ========== load data ==========
 dataset = 'cora'
-adjacency, features, labels, train_mask, val_mask, test_mask = load_cora()
+adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset)
 # train_mask = np.array([True]*features.shape[0])
 # features, adjacency, labels = load_citeseer_from_mat()
 # features, adjacency, labels = load_pubmed()
@@ -20,14 +20,6 @@ if type(features) is not np.ndarray:
     features = features.todense()
 features = torch.Tensor(features)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-features = torch.Tensor(features.toarray() if sp.issparse(features) else features).to(device)
-adjacency = adjacency.to(device)
-labels = torch.tensor(labels).long().to(device)
-train_mask = torch.tensor(train_mask).to(device)
-val_mask = torch.tensor(val_mask).to(device)
-test_mask = torch.tensor(test_mask).to(device)
-
-
 
 # ========== training setting ==========
 features = features.to(device)
@@ -89,4 +81,3 @@ print('============ Start testing ============')
 utils.classification(prediction, labels, train_mask)
 utils.classification(prediction, labels, val_mask)
 utils.classification(prediction, labels, test_mask)
-

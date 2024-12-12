@@ -395,7 +395,7 @@ class SingleLayerEmbeddingGCN(SingleLayerGNN):
             self.expected_X = expected_X
             return embedding.detach()
         training_X = processed_X[self.training_mask, :]
-        training_target = None if embedding_target is None else embedding_target[self.training_mask, :].to(self.device)
+        training_target = None if embedding_target is None else embedding_target[self.training_mask.to(embedding_target.device), :]
         training_labels = self.labels[self.training_mask]
         # learning_rate = self.learning_rate if len(self.losses) < 150 else self.learning_rate / 10
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
