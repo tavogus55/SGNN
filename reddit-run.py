@@ -4,7 +4,7 @@ from data_loader import *
 import warnings
 from input_data import load_data
 from reddit_utils import load_graphsage_data
-
+from datetime import datetime
 
 warnings.filterwarnings('ignore')
 # ========== load data ==========
@@ -52,7 +52,7 @@ sgae = StackedGNN(features, adjacency, layers,
                   eta=10, device=device, labels=labels, metric_func=utils.clustering)
 
 utils.print_SGNN_info(sgae)
-
+start_time = datetime.now()
 print('============ Start Training ============')
 embedding = sgae.run()
 print('============ End Training ============')
@@ -62,3 +62,15 @@ utils.print_SGNN_info(sgae)
 # ========== Clustering ==========
 print('============ Start Clustering ============')
 utils.clustering(embedding.cpu().detach().numpy(), labels)
+
+finish_time = datetime.now()
+print(start_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
+print(finish_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
+time_difference = finish_time - start_time
+
+# Extract hours, minutes, and seconds
+total_seconds = int(time_difference.total_seconds())
+hours, remainder = divmod(total_seconds, 3600)
+minutes, seconds = divmod(remainder, 60)
+
+print(f"Training lasted {hours} hours, {minutes} minutes, {seconds} seconds")

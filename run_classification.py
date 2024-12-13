@@ -4,6 +4,7 @@ from data_loader import *
 import warnings
 import scipy.io as scio
 import json
+from datetime import datetime
 
 warnings.filterwarnings('ignore')
 utils.set_seed(0)
@@ -111,6 +112,7 @@ sgnn = SupervisedStackedGNN(features, adjacency, layers,
 utils.print_SGNN_info(sgnn)
 
 print('============ Start Training ============')
+start_time = datetime.now()
 prediction = sgnn.run()
 print('============ End Training ============')
 
@@ -121,3 +123,15 @@ print('============ Start testing ============')
 utils.classification(prediction, labels, train_mask)
 utils.classification(prediction, labels, val_mask)
 utils.classification(prediction, labels, test_mask)
+finish_time = datetime.now()
+
+time_difference = finish_time - start_time
+
+# Extract hours, minutes, and seconds
+total_seconds = int(time_difference.total_seconds())
+hours, remainder = divmod(total_seconds, 3600)
+minutes, seconds = divmod(remainder, 60)
+
+print(start_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
+print(finish_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
+print(f"Training lasted {hours} hours, {minutes} minutes, {seconds} seconds")

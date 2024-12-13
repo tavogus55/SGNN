@@ -4,7 +4,7 @@ from data_loader import *
 import warnings
 from input_data import load_data
 from reddit_utils import load_graphsage_data, load_reddit_data
-
+from datetime import datetime
 
 warnings.filterwarnings('ignore')
 # ========== load data ==========
@@ -57,7 +57,7 @@ sgnn = SupervisedStackedGNN(features, adjacency, layers,
                             labels=labels, metric_func=utils.classification)
 
 utils.print_SGNN_info(sgnn)
-
+start_time = datetime.now()
 print('============ Start Training ============')
 prediction = sgnn.run()
 print('============ End Training ============')
@@ -69,3 +69,15 @@ print('============ Start testing ============')
 utils.classification(prediction, labels, train_index)
 utils.classification(prediction, labels, val_index)
 utils.classification(prediction, labels, test_index)
+
+finish_time = datetime.now()
+print(start_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
+print(finish_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
+time_difference = finish_time - start_time
+
+# Extract hours, minutes, and seconds
+total_seconds = int(time_difference.total_seconds())
+hours, remainder = divmod(total_seconds, 3600)
+minutes, seconds = divmod(remainder, 60)
+
+print(f"Training lasted {hours} hours, {minutes} minutes, {seconds} seconds")
