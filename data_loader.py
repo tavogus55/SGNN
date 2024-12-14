@@ -34,6 +34,8 @@ def load_ogbn_arxiv():
     val_index = split_idx['valid']
     test_index = split_idx['test']
 
+    return full_adj, data.num_nodes, features, labels, train_index, val_index, test_index
+
 
 def load_cora():
     path = 'data/cora/'
