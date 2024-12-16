@@ -8,15 +8,18 @@ from datetime import datetime
 
 warnings.filterwarnings('ignore')
 
-decision = input("Choose which dataset to use\n1. Reddit\n2. Arxiv\nYour input: ")
+decision = input("Choose which dataset to use\n1. Reddit\n2. Arxiv\n3. Products\nYour input: ")
 dataset_name = None
 
 if decision == "1":
     dataset_name = "Reddit"
     num_data, _, full_adj, feats, _, _, labels, _, _, _ = load_graphsage_data('reddit')
 elif decision == "2":
-    dataset_name = "Arxiv"
-    full_adj, num_data, feats, labels, _, _, _ = load_ogbn_arxiv()
+    dataset_name = "arxiv"
+    full_adj, num_data, feats, labels, _, _, _ = load_ogbn_dataset(dataset_name)
+elif decision == "2":
+    dataset_name = "products"
+    full_adj, num_data, feats, labels, _, _, _ = load_ogbn_dataset(dataset_name)
 else:
     print("Invalid")
     exit()

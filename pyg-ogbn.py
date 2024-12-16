@@ -4,7 +4,7 @@ import numpy as np
 
 def load_ogbn_arxiv():
     # Load the OGBN-Arxiv dataset
-    dataset_name = 'ogbn-arxiv'
+    dataset_name = 'ogbn-products'
     dataset = PygNodePropPredDataset(name=dataset_name, root='data/')
     data = dataset[0]  # Get the graph data object
     split_idx = dataset.get_idx_split()  # Get train/val/test splits

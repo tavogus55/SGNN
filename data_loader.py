@@ -13,9 +13,10 @@ YALE = 'Yale'
 UMIST = 'UMIST'
 THREE_RINGS = 'three_rings'
 
-def load_ogbn_arxiv():
+
+def load_ogbn_dataset(dataset_n):
     # Load the OGBN-Arxiv dataset
-    dataset_name = 'ogbn-arxiv'
+    dataset_name = f'ogbn-{dataset_n}'
     dataset = PygNodePropPredDataset(name=dataset_name, root='data/')
     data = dataset[0]  # Get the graph data object
     split_idx = dataset.get_idx_split()  # Get train/val/test splits
