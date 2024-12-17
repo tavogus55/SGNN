@@ -17,7 +17,7 @@ if decision == "1":
 elif decision == "2":
     dataset_name = "arxiv"
     full_adj, num_data, feats, labels, _, _, _ = load_ogbn_dataset(dataset_name)
-elif decision == "2":
+elif decision == "3":
     dataset_name = "products"
     full_adj, num_data, feats, labels, _, _, _ = load_ogbn_dataset(dataset_name)
 else:
