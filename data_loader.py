@@ -7,7 +7,7 @@ import sys
 from ogb.nodeproppred import PygNodePropPredDataset
 from torch_geometric.utils import to_scipy_sparse_matrix
 import numpy as np
-
+import json
 
 YALE = 'Yale'
 UMIST = 'UMIST'
@@ -37,6 +37,47 @@ def load_ogbn_dataset(dataset_n):
 
     return full_adj, data.num_nodes, features, labels, train_index, val_index, test_index
 
+
+def load_flickr_data():
+    """
+    Loads the Flickr dataset from the given file structure.
+
+    Returns:
+        adj: Sparse adjacency matrix (scipy.sparse.csr_matrix).
+        features: Feature matrix (numpy.ndarray).
+        labels: Labels (numpy.ndarray).
+        train_mask: Training mask (numpy.ndarray).
+        val_mask: Validation mask (numpy.ndarray).
+        test_mask: Test mask (numpy.ndarray).
+    """
+    # Paths to the raw Flickr data
+    raw_dir = "./data/Flickr/raw/"
+
+    # Load data
+    adj_full = sp.load_npz(raw_dir + "adj_full.npz")
+    features = np.load(raw_dir + "feats.npy")
+    with open(raw_dir + "class_map.json") as f:
+        class_map = json.load(f)
+    with open(raw_dir + "role.json") as f:
+        roles = json.load(f)
+
+    # Convert class_map to labels
+    labels = np.array([class_map[str(i)] for i in range(len(class_map))])
+
+    # Create train, val, and test masks
+    num_nodes = len(labels)
+    train_mask = np.zeros(num_nodes, dtype=bool)
+    val_mask = np.zeros(num_nodes, dtype=bool)
+    test_mask = np.zeros(num_nodes, dtype=bool)
+
+    train_mask[roles["tr"]] = True
+    val_mask[roles["va"]] = True
+    test_mask[roles["te"]] = True
+
+    # Create adjacency matrix
+    adj = nx.adjacency_matrix(nx.from_scipy_sparse_matrix(adj_full))
+
+    return adj, features, labels, train_mask, val_mask, test_mask
 
 def load_cora():
     path = 'data/cora/'
