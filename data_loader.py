@@ -38,7 +38,7 @@ def load_ogbn_dataset(dataset_n):
     return full_adj, data.num_nodes, features, labels, train_index, val_index, test_index
 
 
-def load_flickr_data():
+def load_flickr_data(dataset):
     """
     Loads the Flickr dataset from the given file structure.
 
@@ -51,7 +51,7 @@ def load_flickr_data():
         test_mask: Test mask (numpy.ndarray).
     """
     # Paths to the raw Flickr data
-    raw_dir = "./data/Flickr/raw/"
+    raw_dir = f"./data/{dataset}/raw/"
 
     # Load data
     adj_full = sp.load_npz(raw_dir + "adj_full.npz")
@@ -78,6 +78,42 @@ def load_flickr_data():
     adj = nx.adjacency_matrix(nx.from_scipy_sparse_matrix(adj_full))
 
     return adj, features, labels, train_mask, val_mask, test_mask
+
+
+def load_facebook_pagepage_dataset(dataset):
+    """
+    Loads the FacebookPagePage dataset from the specified path.
+
+    :param dataset_path: Path to the directory containing the raw dataset (e.g., "FacebookPagePage/raw").
+    :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
+    """
+    # Load the raw data
+    data = np.load(f"data/{dataset}/raw/facebook.npz", allow_pickle=True)
+
+    # Extract edges, features, and target (labels)
+    edges = data["edges"]  # Edge list
+    features = data["features"]  # Node features
+    labels = data["target"]  # Node labels
+
+    # Create adjacency matrix from edge list
+    num_nodes = features.shape[0]
+    adjacency = sp.coo_matrix(
+        (np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
+        shape=(num_nodes, num_nodes),
+        dtype=np.float32
+    ).tocsc()
+
+    # Assuming no train/val/test masks in this dataset, split manually (if needed)
+    train_mask = np.zeros(num_nodes, dtype=bool)
+    val_mask = np.zeros(num_nodes, dtype=bool)
+    test_mask = np.zeros(num_nodes, dtype=bool)
+
+    # Example: First 70% for training, next 15% for validation, last 15% for testing
+    train_mask[: int(0.7 * num_nodes)] = True
+    val_mask[int(0.7 * num_nodes): int(0.85 * num_nodes)] = True
+    test_mask[int(0.85 * num_nodes):] = True
+
+    return adjacency, features, labels, train_mask, val_mask, test_mask
 
 def load_cora():
     path = 'data/cora/'
