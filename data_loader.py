@@ -245,6 +245,49 @@ def load_actor_dataset(dataset_path):
 
     return adjacency, padded_features, labels, train_mask, val_mask, test_mask
 
+def load_amazon_dataset(dataset_path, dataset_type):
+    """
+    Loads the Amazon dataset from the specified path.
+
+    :param dataset_path: Path to the directory containing the raw dataset (e.g., "Amazon/Computers/raw").
+    :param dataset_type: Type of dataset, e.g., "Computers" or "Photos".
+    :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
+    """
+    # Load the raw data
+    data = np.load(f"data/{dataset_path}/{dataset_type}/raw/amazon_electronics_{dataset_type.lower()}.npz", allow_pickle=True)
+
+    # Extract adjacency matrix components
+    adj_data = data["adj_data"]
+    adj_indices = data["adj_indices"]
+    adj_indptr = data["adj_indptr"]
+    adj_shape = tuple(data["adj_shape"])
+    adjacency = sp.csr_matrix((adj_data, adj_indices, adj_indptr), shape=adj_shape)
+
+    # Extract features
+    attr_data = data["attr_data"]
+    attr_indices = data["attr_indices"]
+    attr_indptr = data["attr_indptr"]
+    attr_shape = tuple(data["attr_shape"])
+    features = sp.csr_matrix((attr_data, attr_indices, attr_indptr), shape=attr_shape).todense()  # Ensure dense matrix
+
+    # Extract labels
+    labels = np.array(data["labels"], dtype=np.int64)  # Convert labels to int64 for compatibility
+
+    # Create train, validation, and test masks
+    num_nodes = features.shape[0]
+    train_mask = np.zeros(num_nodes, dtype=bool)
+    val_mask = np.zeros(num_nodes, dtype=bool)
+    test_mask = np.zeros(num_nodes, dtype=bool)
+
+    # Example split: First 70% for training, next 15% for validation, last 15% for testing
+    train_mask[: int(0.7 * num_nodes)] = True
+    val_mask[int(0.7 * num_nodes): int(0.85 * num_nodes)] = True
+    test_mask[int(0.85 * num_nodes):] = True
+
+    features = np.array(features, dtype=np.float32)
+
+    return adjacency, features, labels, train_mask, val_mask, test_mask
+
 def load_cora():
     path = 'data/cora/'
     data_name = 'cora'
