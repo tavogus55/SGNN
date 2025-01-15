@@ -15,7 +15,7 @@ print(torch.version.__version__)  # Check PyTorch version
 
 
 decision = input("Choose which dataset to use\n1. Cora\n2. Citeseer\n3. Pubmed\n4. Flickr\n5. FacebookPagePage"
-                 "\n6. Actor\n\nYour input: ")
+                 "\n6. Actor\n7. LastFMAsia\n\nYour input: ")
 dataset_name = None
 
 if decision == "1":
@@ -36,9 +36,9 @@ elif decision == "5":
 elif decision == "6":
     dataset_name = "Actor"
     adjacency, features, labels, train_mask, val_mask, test_mask = load_actor_dataset(dataset_name)
-# elif decision == "7":
-#     dataset_name = "LastFMAsia"
-#     adjacency, features, labels, train_mask, val_mask, test_mask = load_other_data(dataset_name)
+elif decision == "7":
+    dataset_name = "LastFMAsia"
+    adjacency, features, labels, train_mask, val_mask, test_mask = load_lastfmasia_dataset(dataset_name)
 # elif decision == "8":
 #     dataset_name = "DeezerEurope"
 #     adjacency, features, labels, train_mask, val_mask, test_mask = load_other_data(dataset_name)
@@ -121,7 +121,8 @@ elif dataset_name == "pubmed":
                    order=layer_config[1]["order"], max_iter=layer_config[1]["max_iter"],
                    lam=lam, batch_size=layer_config[1]["batch_size"]),
     ]
-elif dataset_name == "Flickr" or dataset_name == "FacebookPagePage" or dataset_name == "Actor":
+elif (dataset_name == "Flickr" or dataset_name == "FacebookPagePage" or dataset_name == "Actor"
+      or dataset_name == "LastFMAsia"):
     layers = [
         LayerParam(layer_config[0]["neurons"], inner_act=relu_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
                    learning_rate=eval(layer_config[0]["learning_rate"].replace("^", "**")),
