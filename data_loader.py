@@ -115,6 +115,67 @@ def load_facebook_pagepage_dataset(dataset):
 
     return adjacency, features, labels, train_mask, val_mask, test_mask
 
+
+def load_actor_dataset(dataset_path):
+    """
+    Loads the Actor dataset from the specified path.
+
+    :param dataset_path: Path to the directory containing the raw dataset (e.g., "Actor/raw").
+    :return: adjacency (sparse matrix), features (numpy array), labels (numpy array)
+    """
+    # File paths
+    edges_file = f"data/{dataset_path}/raw/out1_graph_edges.txt"
+    features_labels_file = f"data/{dataset_path}/raw/out1_node_feature_label.txt"
+
+    # Load edges (tab-separated values)
+    edges = np.loadtxt(edges_file, dtype=int, delimiter="\t", skiprows=1)
+
+    # Process features and labels manually due to mixed delimiter
+    features = []
+    labels = []
+    max_feature_length = 0  # Track the maximum length of feature vectors
+
+    with open(features_labels_file, "r") as f:
+        lines = f.readlines()[1:]  # Skip the header line
+        for line in lines:
+            parts = line.strip().split("\t")  # Split by tab
+            feature_values = list(map(float, parts[1].split(",")))  # Split features by comma
+            label = int(parts[-1])  # Last column is the label
+
+            features.append(feature_values)
+            labels.append(label)
+
+            # Update maximum feature length
+            max_feature_length = max(max_feature_length, len(feature_values))
+
+    # Pad features to the maximum feature length
+    padded_features = np.zeros((len(features), max_feature_length), dtype=np.float32)
+    for i, feature_row in enumerate(features):
+        padded_features[i, :len(feature_row)] = feature_row
+
+    # Convert labels to numpy array
+    labels = np.array(labels, dtype=np.int64)  # Ensure int64 for compatibility with PyTorch
+
+    # Create adjacency matrix
+    num_nodes = len(features)
+    adjacency = sp.coo_matrix(
+        (np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
+        shape=(num_nodes, num_nodes),
+        dtype=np.float32
+    ).tocsc()
+
+    # Generate train/validation/test masks manually
+    train_mask = np.zeros(num_nodes, dtype=bool)
+    val_mask = np.zeros(num_nodes, dtype=bool)
+    test_mask = np.zeros(num_nodes, dtype=bool)
+
+    # Example: First 70% for training, next 15% for validation, last 15% for testing
+    train_mask[: int(0.7 * num_nodes)] = True
+    val_mask[int(0.7 * num_nodes): int(0.85 * num_nodes)] = True
+    test_mask[int(0.85 * num_nodes):] = True
+
+    return adjacency, padded_features, labels, train_mask, val_mask, test_mask
+
 def load_cora():
     path = 'data/cora/'
     data_name = 'cora'
