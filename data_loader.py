@@ -117,13 +117,48 @@ def load_facebook_pagepage_dataset(dataset):
 
 def load_lastfmasia_dataset(dataset):
     """
-    Loads the FacebookPagePage dataset from the specified path.
+    Loads the LastFMAsia dataset from the specified path.
 
-    :param dataset_path: Path to the directory containing the raw dataset (e.g., "FacebookPagePage/raw").
+    :param dataset_path: Path to the directory containing the raw dataset (e.g., "LastFMAsia/raw").
     :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
     """
     # Load the raw data
     data = np.load(f"data/{dataset}/raw/lastfm_asia.npz", allow_pickle=True)
+
+    # Extract edges, features, and target (labels)
+    edges = data["edges"]  # Edge list
+    features = data["features"]  # Node features
+    labels = data["target"]  # Node labels
+
+    # Create adjacency matrix from edge list
+    num_nodes = features.shape[0]
+    adjacency = sp.coo_matrix(
+        (np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
+        shape=(num_nodes, num_nodes),
+        dtype=np.float32
+    ).tocsc()
+
+    # Assuming no train/val/test masks in this dataset, split manually (if needed)
+    train_mask = np.zeros(num_nodes, dtype=bool)
+    val_mask = np.zeros(num_nodes, dtype=bool)
+    test_mask = np.zeros(num_nodes, dtype=bool)
+
+    # Example: First 70% for training, next 15% for validation, last 15% for testing
+    train_mask[: int(0.7 * num_nodes)] = True
+    val_mask[int(0.7 * num_nodes): int(0.85 * num_nodes)] = True
+    test_mask[int(0.85 * num_nodes):] = True
+
+    return adjacency, features, labels, train_mask, val_mask, test_mask
+
+def load_deezereurope_dataset(dataset):
+    """
+    Loads the DeezerEurope dataset from the specified path.
+
+    :param dataset_path: Path to the directory containing the raw dataset (e.g., "DeezerEurope/raw").
+    :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
+    """
+    # Load the raw data
+    data = np.load(f"data/{dataset}/raw/deezer_europe.npz", allow_pickle=True)
 
     # Extract edges, features, and target (labels)
     edges = data["edges"]  # Edge list
