@@ -16,7 +16,7 @@ print(torch.cuda.is_available())  # Check if CUDA is detected
 print(torch.version.__version__)  # Check PyTorch version
 
 
-decision = input("Choose which dataset to use\n1. Cora\n2. Citeseer\n3. Pubmed\n\nYour input: ")
+decision = input("Choose which dataset to use\n1. Cora\n2. Citeseer\n3. Pubmed\n4. Flickr\n\nYour input: ")
 dataset_name = None
 
 if decision == "1":
@@ -28,6 +28,9 @@ elif decision == "2":
 elif decision == "3":
     dataset_name = "PubMed"
     features, adjacency, labels = load_pubmed()
+elif decision == "4":
+    dataset_name = "Flickr"
+    adjacency, features, labels, _, _, _ = load_flickr_data(dataset_name)
 else:
     print("Invalid")
     exit()
@@ -74,7 +77,7 @@ linear_func = Func(None)
 leaky_relu_func = Func(torch.nn.functional.leaky_relu, negative_slope=negative_slope)
 
 
-if dataset_name == "PubMed" or dataset_name == "Citeseer":
+if dataset_name == "PubMed" or dataset_name == "Citeseer" or dataset_name == "Flickr":
     layers = [
         LayerParam(layers[0], inner_act=linear_func, act=leaky_relu_func, gnn_type=LayerParam.GAE,
                    mask_rate=mask_rate, lam=lam, max_iter=max_iter, learning_rate=learning_rate,
