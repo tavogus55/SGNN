@@ -1,7 +1,9 @@
-from torch_geometric.datasets import Planetoid, Reddit
+from torch_geometric.datasets import (Planetoid, Reddit, Flickr, FacebookPagePage, Actor, LastFMAsia, DeezerEurope,
+                                      Amazon)
 
 # Define available datasets
-available_datasets = ['Cora', 'CiteSeer', 'PubMed', 'Reddit']
+available_datasets = ['Cora', 'CiteSeer', 'PubMed', 'Reddit', 'Flickr', 'FacebookPagePage', 'Actor',
+                      'LastFMAsia', 'DeezerEurope', 'Amazon']
 
 # Prompt the user to select a dataset
 print("Available datasets:")
@@ -18,6 +20,18 @@ if 1 <= choice <= len(available_datasets):
     # Download the selected dataset
     if selected_dataset == 'Reddit':
         dataset = Reddit(root='data/reddite')
+    elif selected_dataset == 'Flickr':
+        dataset = Flickr(root='data/Flickr')
+    elif selected_dataset == 'FacebookPagePage':
+        dataset = FacebookPagePage(root='data/FacebookPagePage')
+    elif selected_dataset == 'Actor':
+        dataset = Actor(root='data/Actor')
+    elif selected_dataset == 'LastFMAsia':
+        dataset = LastFMAsia(root='data/LastFMAsia')
+    elif selected_dataset == 'DeezerEurope':
+        dataset = DeezerEurope(root='data/DeezerEurope')
+    elif selected_dataset == 'Amazon':
+        dataset = Amazon(root='data/Amazon', name='Photo')
     else:
         dataset = Planetoid(root='data/', name=selected_dataset)
 
