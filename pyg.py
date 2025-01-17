@@ -1,9 +1,9 @@
 from torch_geometric.datasets import (Planetoid, Reddit, Flickr, FacebookPagePage, Actor, LastFMAsia, DeezerEurope,
-                                      Amazon)
+                                      Amazon, Yelp)
 
 # Define available datasets
 available_datasets = ['Cora', 'CiteSeer', 'PubMed', 'Reddit', 'Flickr', 'FacebookPagePage', 'Actor',
-                      'LastFMAsia', 'DeezerEurope', 'Amazon']
+                      'LastFMAsia', 'DeezerEurope', 'Amazon', 'Yelp']
 
 # Prompt the user to select a dataset
 print("Available datasets:")
@@ -32,6 +32,8 @@ if 1 <= choice <= len(available_datasets):
         dataset = DeezerEurope(root='data/DeezerEurope')
     elif selected_dataset == 'Amazon':
         dataset = Amazon(root='data/Amazon', name='Photo')
+    elif selected_dataset == 'Yelp':
+        dataset = Yelp(root='data/Yelp')
     else:
         dataset = Planetoid(root='data/', name=selected_dataset)
 

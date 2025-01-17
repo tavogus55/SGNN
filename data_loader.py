@@ -80,6 +80,50 @@ def load_flickr_data(dataset):
     return adj, features, labels, train_mask, val_mask, test_mask
 
 
+def load_yelp_data(dataset):
+    """
+    Loads the Yelp dataset from the given file structure.
+
+    Returns:
+        adj: Sparse adjacency matrix (scipy.sparse.csr_matrix).
+        features: Feature matrix (numpy.ndarray).
+        labels: Labels (numpy.ndarray).
+        train_mask: Training mask (numpy.ndarray).
+        val_mask: Validation mask (numpy.ndarray).
+        test_mask: Test mask (numpy.ndarray).
+    """
+    # Paths to the raw Yelp data
+    raw_dir = f"./data/{dataset}/raw/"
+
+    # Load data
+    adj_full = sp.load_npz(raw_dir + "adj_full.npz")
+    features = np.load(raw_dir + "feats.npy")
+    with open(raw_dir + "class_map.json") as f:
+        class_map = json.load(f)
+    with open(raw_dir + "role.json") as f:
+        roles = json.load(f)
+
+    # Map labels to a continuous range starting from 0
+    class_map_values = list(class_map.values())
+    unique_classes = sorted(set(class_map_values))
+    class_mapping = {c: idx for idx, c in enumerate(unique_classes)}
+    labels = np.array([class_mapping[class_map[str(i)]] for i in range(len(class_map))], dtype=np.int64)
+
+    # Create train, val, and test masks
+    num_nodes = len(labels)
+    train_mask = np.zeros(num_nodes, dtype=bool)
+    val_mask = np.zeros(num_nodes, dtype=bool)
+    test_mask = np.zeros(num_nodes, dtype=bool)
+
+    train_mask[roles["tr"]] = True
+    val_mask[roles["va"]] = True
+    test_mask[roles["te"]] = True
+
+    # Create adjacency matrix
+    adj = sp.csr_matrix(adj_full)  # Ensure it is in CSR format
+
+    return adj, features, labels, train_mask, val_mask, test_mask
+
 def load_facebook_pagepage_dataset(dataset):
     """
     Loads the FacebookPagePage dataset from the specified path.
