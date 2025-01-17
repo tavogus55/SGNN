@@ -74,6 +74,82 @@
             "activation": "linear",
             "negative_slope": 0.2
         },
+        "Actor": {
+            "mask_rate": 0.2,
+            "overlook_rates": null,
+            "layers": [
+                256,
+                128
+            ],
+            "max_iter": 100,
+            "batch": 256,
+            "BP_count": 5,
+            "learning_rate": "10^-4",
+            "lam": "10^-6",
+            "eta": 10,
+            "loss": "loss1",
+            "order": 2,
+            "AU": "leaky_relu slope=0.2",
+            "activation": "linear",
+            "negative_slope": 0.2
+        },
+        "LastFMAsia": {
+            "mask_rate": 0.2,
+            "overlook_rates": null,
+            "layers": [
+                256,
+                128
+            ],
+            "max_iter": 100,
+            "batch": 256,
+            "BP_count": 5,
+            "learning_rate": "10^-4",
+            "lam": "10^-6",
+            "eta": 10,
+            "loss": "loss1",
+            "order": 2,
+            "AU": "leaky_relu slope=0.2",
+            "activation": "linear",
+            "negative_slope": 0.2
+        },
+        "DeezerEurope": {
+            "mask_rate": 0.2,
+            "overlook_rates": null,
+            "layers": [
+                256,
+                128
+            ],
+            "max_iter": 100,
+            "batch": 256,
+            "BP_count": 5,
+            "learning_rate": "10^-4",
+            "lam": "10^-6",
+            "eta": 10,
+            "loss": "loss1",
+            "order": 2,
+            "AU": "leaky_relu slope=0.2",
+            "activation": "linear",
+            "negative_slope": 0.2
+        },
+        "Amazon": {
+            "mask_rate": 0.2,
+            "overlook_rates": null,
+            "layers": [
+                256,
+                128
+            ],
+            "max_iter": 100,
+            "batch": 256,
+            "BP_count": 5,
+            "learning_rate": "10^-4",
+            "lam": "10^-6",
+            "eta": 10,
+            "loss": "loss1",
+            "order": 2,
+            "AU": "leaky_relu slope=0.2",
+            "activation": "linear",
+            "negative_slope": 0.2
+        },
         "Citeseer": {
             "mask_rate": 0.2,
             "overlook_rates": null,

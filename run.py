@@ -17,7 +17,8 @@ print(torch.version.__version__)  # Check PyTorch version
 
 
 decision = input("Choose which dataset to use\n1. Cora\n2. Citeseer\n3. Pubmed\n4. Flickr"
-                 "\n5. FacebookPagePage\n\nYour input: ")
+                 "\n5. FacebookPagePage\n6. Actor\n7. LastFMAsia\n8. DeezerEurope\n"
+                 "9. Amazon Computers\n10. Amazon Photos\n\nYour input: ")
 dataset_name = None
 
 if decision == "1":
@@ -35,6 +36,23 @@ elif decision == "4":
 elif decision == "5":
     dataset_name = "FacebookPagePage"
     adjacency, features, labels, _, _, _ = load_facebook_pagepage_dataset(dataset_name)
+elif decision == "6":
+    dataset_name = "Actor"
+    adjacency, features, labels, _, _, _ = load_actor_dataset(dataset_name)
+elif decision == "7":
+    dataset_name = "LastFMAsia"
+    adjacency, features, labels, _, _, _ = load_lastfmasia_dataset(dataset_name)
+elif decision == "8":
+    dataset_name = "DeezerEurope"
+    adjacency, features, labels, _, _, _ = load_deezereurope_dataset(dataset_name)
+elif decision == "9":
+    dataset_name = "Amazon"
+    dataset_type = "Computers"
+    adjacency, features, labels, _, _, _ = load_amazon_dataset(dataset_name, dataset_type)
+elif decision == "10":
+    dataset_name = "Amazon"
+    dataset_type = "Photo"
+    adjacency, features, labels, _, _, _ = load_amazon_dataset(dataset_name, dataset_type)
 else:
     print("Invalid")
     exit()
@@ -82,7 +100,8 @@ leaky_relu_func = Func(torch.nn.functional.leaky_relu, negative_slope=negative_s
 
 
 if (dataset_name == "PubMed" or dataset_name == "Citeseer" or dataset_name == "Flickr"
-        or dataset_name == "FacebookPagePage"):
+        or dataset_name == "FacebookPagePage" or dataset_name == "Actor" or dataset_name == "LastFMAsia"
+        or dataset_name == "DeezerEurope" or dataset_name == "Amazon"):
     layers = [
         LayerParam(layers[0], inner_act=linear_func, act=leaky_relu_func, gnn_type=LayerParam.GAE,
                    mask_rate=mask_rate, lam=lam, max_iter=max_iter, learning_rate=learning_rate,
