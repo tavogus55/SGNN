@@ -20,7 +20,7 @@ decision = input("Choose which dataset to use\n1. Cora\n2. Citeseer\n3. Pubmed\n
                  "\n5. FacebookPagePage\n6. Actor\n7. LastFMAsia\n8. DeezerEurope\n"
                  "9. Amazon Computers\n10. Amazon Photos\n\nYour input: ")
 dataset_name = None
-
+start_time = datetime.now()
 if decision == "1":
     dataset_name = "Cora"
     features, _, adjacency, labels = load_cora()
@@ -134,7 +134,7 @@ sgae = StackedGNN(features, adjacency, layers,
                   labels=labels, metric_func=utils.clustering)
 
 utils.print_SGNN_info(sgae)
-start_time = datetime.now()
+
 print('============ Start Training ============')
 embedding = sgae.run()
 print('============ End Training ============')
@@ -146,7 +146,7 @@ print('============ Start Clustering ============')
 utils.clustering_tensor(embedding.detach(), labels, relaxed_kmeans=True)
 finish_time = datetime.now()
 print(start_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
-print(finish_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
+print(finish_time.strftime("Process finished at: " + "%Y-%m-%d %H:%M:%S"))
 time_difference = finish_time - start_time
 
 # Extract hours, minutes, and seconds
@@ -155,3 +155,5 @@ hours, remainder = divmod(total_seconds, 3600)
 minutes, seconds = divmod(remainder, 60)
 
 print(f"Training lasted {hours} hours, {minutes} minutes, {seconds} seconds")
+print(f"Official efficiency: {total_seconds / (len(layers)*max_iter*BP_count)}")
+print()

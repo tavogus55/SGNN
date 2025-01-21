@@ -17,6 +17,7 @@ print(torch.version.__version__)  # Check PyTorch version
 decision = input("Choose which dataset to use\n1. Cora\n2. Citeseer\n3. Pubmed\n4. Flickr\n5. FacebookPagePage"
                  "\n6. Actor\n7. LastFMAsia\n8. DeezerEurope\n9. Amazon Computers\n10. Amazon Photos\n\nYour input: ")
 dataset_name = None
+start_time = datetime.now()
 
 if decision == "1":
     dataset_name = "cora"
@@ -148,7 +149,6 @@ sgnn = SupervisedStackedGNN(features, adjacency, layers,
 utils.print_SGNN_info(sgnn)
 
 print('============ Start Training ============')
-start_time = datetime.now()
 prediction = sgnn.run()
 print('============ End Training ============')
 
@@ -171,3 +171,6 @@ minutes, seconds = divmod(remainder, 60)
 print(start_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
 print(finish_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
 print(f"Training lasted {hours} hours, {minutes} minutes, {seconds} seconds")
+max_iter = layer_config[0]["max_iter"]
+
+print(f"Official efficiency: {total_seconds / (len(layers)*max_iter*BP_count)}")
