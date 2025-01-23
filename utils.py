@@ -161,6 +161,7 @@ def classification(prediction, labels, mask=None):
     acc = f1_score(gnd, pred, average='micro')
     f1 = f1_score(gnd, pred, average='macro')
     print('\n======= ACC: %5.4f, F1-Score: %5.4f =======\n' % (acc, f1))
+    return acc
 
 
 def set_seed(seed):
