@@ -146,6 +146,7 @@ def clustering_tensor(X, labels, relaxed_kmeans=False):
         return
     rkm_acc, rkm_nmi = relaxed_k_means(X, n_clusters, labels)
     print('Relaxed K-Means results: ACC: %5.4f, NMI: %5.4f' % (rkm_acc, rkm_nmi))
+    return rkm_acc
     # K = embedding.matmul(embedding.t()).abs()
     # K = (K + K.t()) / 2
     # affinity = K.cpu().detach().numpy()

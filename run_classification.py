@@ -14,39 +14,39 @@ print(torch.cuda.is_available())  # Check if CUDA is detected
 print(torch.version.__version__)  # Check PyTorch version
 
 
-def run_classificaton(dataset_name):
+def run_classificaton(dataset_choice):
 
     start_time = datetime.now()
 
-    if dataset_name == "1":
+    if dataset_choice == "1":
         dataset_name = "cora"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset_name)
-    elif dataset_name == "2":
+    elif dataset_choice == "2":
         dataset_name = "citeseer"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset_name)
-    elif dataset_name == "3":
+    elif dataset_choice == "3":
         dataset_name = "pubmed"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset_name)
-    elif dataset_name == "4":
+    elif dataset_choice == "4":
         dataset_name = "Flickr"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_flickr_data(dataset_name)
-    elif dataset_name == "5":
+    elif dataset_choice == "5":
         dataset_name = "FacebookPagePage"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_facebook_pagepage_dataset(dataset_name)
-    elif dataset_name == "6":
+    elif dataset_choice == "6":
         dataset_name = "Actor"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_actor_dataset(dataset_name)
-    elif dataset_name == "7":
+    elif dataset_choice == "7":
         dataset_name = "LastFMAsia"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_lastfmasia_dataset(dataset_name)
-    elif dataset_name == "8":
+    elif dataset_choice == "8":
         dataset_name = "DeezerEurope"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_deezereurope_dataset(dataset_name)
-    elif dataset_name == "9":
+    elif dataset_choice == "9":
         dataset_name = "Amazon"
         dataset_type = "Computers"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_amazon_dataset(dataset_name, dataset_type)
-    elif dataset_name == "10":
+    elif dataset_choice == "10":
         dataset_name = "Amazon"
         dataset_type = "Photo"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_amazon_dataset(dataset_name, dataset_type)
@@ -171,7 +171,8 @@ def run_classificaton(dataset_name):
     print(finish_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
     print(f"Training lasted {hours} hours, {minutes} minutes, {seconds} seconds")
     max_iter = layer_config[0]["max_iter"]
-    efficiency = total_seconds / (len(layers)*max_iter*BP_count)
+    total_iterations = max_iter*len(layers)*((BP_count*2)+1)
+    efficiency = total_seconds / total_iterations
     print(f"Official efficiency: {efficiency}")
 
     return accuracy, efficiency, dataset_name

@@ -1,10 +1,12 @@
 from run_classification import run_classificaton
+from run import run_clustering
+
 
 def main():
 
-
-    dataset_decision = input("Choose which dataset to use\n1. Cora\n2. Citeseer\n3. Pubmed\n4. Flickr\n5. FacebookPagePage"
-                     "\n6. Actor\n7. LastFMAsia\n8. DeezerEurope\n9. Amazon Computers\n10. Amazon Photos\n\nYour input: ")
+    dataset_decision = input("Choose which dataset to use\n1. Cora\n2. Citeseer\n3. Pubmed\n4. Flickr"
+                             "\n5. FacebookPagePage" "\n6. Actor\n7. LastFMAsia\n8. DeezerEurope"
+                             "\n9. Amazon Computers\n10. Amazon Photos\n\nYour input: ")
 
     task_decision = input(
         "Choose which dataset to use\n1. Clustering\n2. Classification\n\nYour input: ")
@@ -19,7 +21,6 @@ def main():
     accuracy_list = []
     efficiency_list = []
 
-
     for time in range(exp_times):
         print('========================')
         print('========================')
@@ -28,7 +29,9 @@ def main():
         print('========================')
         if task_decision == "1":
             task_name = 'Clustering'
-            pass
+            accuracy, efficiency, dataset_name = run_clustering(dataset_decision)
+            accuracy_list.append(accuracy)
+            efficiency_list.append(efficiency)
         elif task_decision == "2":
             task_name = 'Classification'
             accuracy, efficiency, dataset_name = run_classificaton(dataset_decision)
@@ -53,8 +56,6 @@ def main():
     print(f"All the efficiencies: {efficiency_list}")
     print(f"The average accuracy is: {average_accuracy}")
     print(f"The average efficiency is: {average_efficiency}")
-
-
 
 
 if __name__ == "__main__":
