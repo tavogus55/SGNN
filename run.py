@@ -136,7 +136,7 @@ def run_clustering(dataset_choice):
 
     # ========== Clustering ==========
     print('============ Start Clustering ============')
-    accuracy = utils.clustering_tensor(embedding.detach(), labels, relaxed_kmeans=True)
+    accuracy, nmi = utils.clustering_tensor(embedding.detach(), labels, relaxed_kmeans=True)
     finish_time = datetime.now()
     print(start_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
     print(finish_time.strftime("Process finished at: " + "%Y-%m-%d %H:%M:%S"))
@@ -154,4 +154,4 @@ def run_clustering(dataset_choice):
     efficiency = total_seconds / total_iterations
     print(f"Official efficiency: {efficiency}")
 
-    return accuracy, efficiency, dataset_name
+    return accuracy, efficiency, nmi, dataset_name

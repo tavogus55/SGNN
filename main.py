@@ -17,9 +17,11 @@ def main():
     average_efficiency = 0
     total_accuracy = 0
     total_efficiency = 0
+    total_nmi = 0
 
     accuracy_list = []
     efficiency_list = []
+    nmi_list = []
 
     for time in range(exp_times):
         print('========================')
@@ -29,10 +31,12 @@ def main():
         print('========================')
         if task_decision == "1":
             task_name = 'Clustering'
-            accuracy, efficiency, dataset_name = run_clustering(dataset_decision)
+            accuracy, efficiency, nmi, dataset_name = run_clustering(dataset_decision)
             accuracy_list.append(accuracy)
             efficiency_list.append(efficiency)
+            nmi_list.append(nmi)
         elif task_decision == "2":
+            nmi = 0
             task_name = 'Classification'
             accuracy, efficiency, dataset_name = run_classificaton(dataset_decision)
             accuracy_list.append(accuracy)
@@ -41,9 +45,11 @@ def main():
 
         total_accuracy = total_accuracy + accuracy
         total_efficiency = total_efficiency + efficiency
+        total_nmi = total_nmi + nmi
 
     average_accuracy = total_accuracy / exp_times
     average_efficiency = total_efficiency / exp_times
+    average_nmi = total_nmi / exp_times
     print('========================')
     print('========================')
     print(f"Experiment results")
@@ -54,8 +60,10 @@ def main():
     print(f'Experiment count: {exp_times}')
     print(f"All the accuracies: {accuracy_list}")
     print(f"All the efficiencies: {efficiency_list}")
+    print(f"All the nmi: {nmi_list}")
     print(f"The average accuracy is: {average_accuracy}")
     print(f"The average efficiency is: {average_efficiency}")
+    print(f"The average nmi is: {average_nmi}")
 
 
 if __name__ == "__main__":
