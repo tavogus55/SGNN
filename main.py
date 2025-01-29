@@ -1,17 +1,31 @@
 from run_classification import run_classificaton
 from run import run_clustering
+import argparse
 
 
 def main():
 
-    dataset_decision = input("Choose which dataset to use\n1. Cora\n2. Citeseer\n3. Pubmed\n4. Flickr"
-                             "\n5. FacebookPagePage" "\n6. Actor\n7. LastFMAsia\n8. DeezerEurope"
-                             "\n9. Amazon Computers\n10. Amazon Photos\n\nYour input: ")
+    parser = argparse.ArgumentParser(description="Example script")
+    parser.add_argument("--name", type=str, required=True, help="Dataset name ()")
+    parser.add_argument("--task", type=str, required=True, help="Classification or Clustering")
+    parser.add_argument("--exp", type=int, required=True, help="How many times do you want to run the exercise")
+    args = parser.parse_args()
 
-    task_decision = input(
-        "Choose which dataset to use\n1. Clustering\n2. Classification\n\nYour input: ")
 
-    exp_times = int(input("How many times do you want to run the experiment?"))
+    # dataset_decision = input("Choose which dataset to use\n1. Cora\n2. Citeseer\n3. Pubmed\n4. Flickr"
+    #                          "\n5. FacebookPagePage" "\n6. Actor\n7. LastFMAsia\n8. DeezerEurope"
+    #                          "\n9. Amazon Computers\n10. Amazon Photos\n\nYour input: ")
+    #
+    # task_decision = input(
+    #     "Choose which dataset to use\n1. Clustering\n2. Classification\n\nYour input: ")
+    #
+    # exp_times = int(input("How many times do you want to run the experiment?"))
+
+    dataset_decision = args.name
+    task_decision = args.task
+    exp_times = args.exp
+
+
 
     average_accuracy = 0
     average_efficiency = 0
@@ -29,13 +43,13 @@ def main():
         print(f"Running experiment {time}")
         print('========================')
         print('========================')
-        if task_decision == "1":
+        if task_decision == 'Clustering':
             task_name = 'Clustering'
             accuracy, efficiency, nmi, dataset_name = run_clustering(dataset_decision)
             accuracy_list.append(accuracy)
             efficiency_list.append(efficiency)
             nmi_list.append(nmi)
-        elif task_decision == "2":
+        elif task_decision == 'Classification':
             nmi = 0
             task_name = 'Classification'
             accuracy, efficiency, dataset_name = run_classificaton(dataset_decision)

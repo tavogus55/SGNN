@@ -443,17 +443,17 @@ def load_data(dataset_str):
     names = ['x', 'y', 'tx', 'ty', 'allx', 'ally', 'graph']
     objects = []
     for i in range(len(names)):
-        with open("data/node/ind.{}.{}".format(dataset_str, names[i]), 'rb') as f:
+        with open("data/node/ind.{}.{}".format(dataset_str.lower(), names[i]), 'rb') as f:
             if sys.version_info > (3, 0):
                 objects.append(pkl.load(f, encoding='latin1'))
             else:
                 objects.append(pkl.load(f))
 
     x, y, tx, ty, allx, ally, graph = tuple(objects)
-    test_idx_reorder = parse_index_file("data/node/ind.{}.test.index".format(dataset_str))
+    test_idx_reorder = parse_index_file("data/node/ind.{}.test.index".format(dataset_str.lower()))
     test_idx_range = np.sort(test_idx_reorder)
 
-    if dataset_str == 'citeseer':
+    if dataset_str == 'Citeseer':
         # Fix citeseer dataset (there are some isolated nodes in the graph)
         # Find isolated nodes, add them as zero-vecs into the right position
         test_idx_range_full = range(min(test_idx_reorder), max(test_idx_reorder)+1)

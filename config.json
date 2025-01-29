@@ -189,7 +189,7 @@
         }
     },
     "Node Classification": {
-        "cora": {
+        "Cora": {
             "eta": 100,
             "BP_count": 5,
             "lam": "10^-3",
@@ -223,7 +223,7 @@
                 }
             ]
         },
-        "citeseer": {
+        "Citeseer": {
             "eta": 100,
             "BP_count": 3,
             "lam": "10^-3",
@@ -248,7 +248,7 @@
                 }
             ]
         },
-        "pubmed": {
+        "PubMed": {
             "eta": 100,
             "BP_count": 3,
             "lam": "10^-3",

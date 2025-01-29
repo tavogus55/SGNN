@@ -18,35 +18,35 @@ def run_classificaton(dataset_choice):
 
     start_time = datetime.now()
 
-    if dataset_choice == "1":
-        dataset_name = "cora"
+    if dataset_choice == "Cora":
+        dataset_name = "Cora"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset_name)
-    elif dataset_choice == "2":
-        dataset_name = "citeseer"
+    elif dataset_choice == "Citeseer":
+        dataset_name = "Citeseer"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset_name)
-    elif dataset_choice == "3":
-        dataset_name = "pubmed"
+    elif dataset_choice == "PubMed":
+        dataset_name = "PubMed"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset_name)
-    elif dataset_choice == "4":
+    elif dataset_choice == "Flickr":
         dataset_name = "Flickr"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_flickr_data(dataset_name)
-    elif dataset_choice == "5":
+    elif dataset_choice == "FacebookPagePage":
         dataset_name = "FacebookPagePage"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_facebook_pagepage_dataset(dataset_name)
-    elif dataset_choice == "6":
+    elif dataset_choice == "Actor":
         dataset_name = "Actor"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_actor_dataset(dataset_name)
-    elif dataset_choice == "7":
+    elif dataset_choice == "LastFMAsia":
         dataset_name = "LastFMAsia"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_lastfmasia_dataset(dataset_name)
-    elif dataset_choice == "8":
+    elif dataset_choice == "DeezerEurope":
         dataset_name = "DeezerEurope"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_deezereurope_dataset(dataset_name)
-    elif dataset_choice == "9":
+    elif dataset_choice == "Amazon Computers":
         dataset_name = "Amazon"
         dataset_type = "Computers"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_amazon_dataset(dataset_name, dataset_type)
-    elif dataset_choice == "10":
+    elif dataset_choice == "Amazon Photo":
         dataset_name = "Amazon"
         dataset_type = "Photo"
         adjacency, features, labels, train_mask, val_mask, test_mask = load_amazon_dataset(dataset_name, dataset_type)
@@ -84,7 +84,7 @@ def run_classificaton(dataset_choice):
     leaky_relu_func = Func(torch.nn.functional.leaky_relu, negative_slope=0.2)
     tanh = Func(torch.nn.functional.tanh)
 
-    if dataset_name == "cora":
+    if dataset_name == "Cora":
         layers = [
             LayerParam(layer_config[0]["neurons"], inner_act=linear_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
                        learning_rate=eval(layer_config[0]["learning_rate"].replace("^", "**")),
@@ -100,7 +100,7 @@ def run_classificaton(dataset_choice):
                        batch_size=layer_config[2]["batch_size"]),
         ]
 
-    elif dataset_name == "citeseer":
+    elif dataset_name == "Citeseer":
         layers = [
             LayerParam(layer_config[0]["neurons"], inner_act=relu_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
                        learning_rate=eval(layer_config[0]["learning_rate"].replace("^", "**")),
@@ -112,7 +112,7 @@ def run_classificaton(dataset_choice):
                        lam=lam, batch_size=layer_config[1]["batch_size"]),
         ]
 
-    elif dataset_name == "pubmed":
+    elif dataset_name == "PubMed":
         layers = [
             LayerParam(layer_config[0]["neurons"], inner_act=relu_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
                        learning_rate=eval(layer_config[0]["learning_rate"].replace("^", "**")),
