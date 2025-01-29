@@ -170,8 +170,12 @@ def run_classificaton(dataset_choice):
     print(start_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
     print(finish_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
     print(f"Training lasted {hours} hours, {minutes} minutes, {seconds} seconds")
-    max_iter = layer_config[0]["max_iter"]
-    total_iterations = max_iter*len(layers)*((BP_count*2)+1)
+    total_max_iter = 0
+    for layer in layer_config:
+        total_max_iter = total_max_iter + layer["max_iter"]
+
+    total_iterations = total_max_iter*((BP_count*2)+1)
+    print(f"Total iterations: {total_iterations}")
     efficiency = total_seconds / total_iterations
     print(f"Official efficiency: {efficiency}")
 

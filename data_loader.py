@@ -289,7 +289,7 @@ def load_actor_dataset(dataset_path):
 
     return adjacency, padded_features, labels, train_mask, val_mask, test_mask
 
-def load_amazon_dataset(dataset_path, dataset_type):
+def load_amazon_dataset(dataset_name, dataset_type):
     """
     Loads the Amazon dataset from the specified path.
 
@@ -298,7 +298,7 @@ def load_amazon_dataset(dataset_path, dataset_type):
     :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
     """
     # Load the raw data
-    data = np.load(f"data/{dataset_path}/{dataset_type}/raw/amazon_electronics_{dataset_type.lower()}.npz", allow_pickle=True)
+    data = np.load(f"data/{dataset_name}/{dataset_type}/raw/amazon_electronics_{dataset_type.lower()}.npz", allow_pickle=True)
 
     # Extract adjacency matrix components
     adj_data = data["adj_data"]
