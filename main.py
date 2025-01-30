@@ -11,27 +11,20 @@ def main():
     parser.add_argument("--exp", type=int, required=True, help="How many times do you want to run the exercise")
     args = parser.parse_args()
 
-
-    # dataset_decision = input("Choose which dataset to use\n1. Cora\n2. Citeseer\n3. Pubmed\n4. Flickr"
-    #                          "\n5. FacebookPagePage" "\n6. Actor\n7. LastFMAsia\n8. DeezerEurope"
-    #                          "\n9. Amazon Computers\n10. Amazon Photos\n\nYour input: ")
-    #
-    # task_decision = input(
-    #     "Choose which dataset to use\n1. Clustering\n2. Classification\n\nYour input: ")
-    #
-    # exp_times = int(input("How many times do you want to run the experiment?"))
-
     dataset_decision = args.name
     task_decision = args.task
     exp_times = args.exp
-
-
 
     average_accuracy = 0
     average_efficiency = 0
     total_accuracy = 0
     total_efficiency = 0
     total_nmi = 0
+    accuracy = 0
+    efficiency = 0
+    nmi = 0
+    dataset_name = ""
+    task_name = ""
 
     accuracy_list = []
     efficiency_list = []
@@ -40,7 +33,7 @@ def main():
     for time in range(exp_times):
         print('========================')
         print('========================')
-        print(f"Running experiment {time}")
+        print(f"Running experiment {time + 1}")
         print('========================')
         print('========================')
         if task_decision == 'Clustering':

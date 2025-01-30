@@ -1,4 +1,7 @@
 import torch
+from keras_applications.mobilenet_v2 import layers
+from tensorboard.compat.tensorflow_stub.dtypes import double
+
 from model import *
 from data_loader import *
 import warnings
@@ -18,38 +21,24 @@ def run_classificaton(dataset_choice):
 
     start_time = datetime.now()
 
-    if dataset_choice == "Cora":
-        dataset_name = "Cora"
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset_name)
-    elif dataset_choice == "Citeseer":
-        dataset_name = "Citeseer"
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset_name)
-    elif dataset_choice == "PubMed":
-        dataset_name = "PubMed"
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset_name)
+    if dataset_choice == "Cora" or dataset_choice == "Citeseer" or dataset_choice == "PubMed":
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset_choice)
     elif dataset_choice == "Flickr":
-        dataset_name = "Flickr"
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_flickr_data(dataset_name)
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_flickr_data(dataset_choice)
     elif dataset_choice == "FacebookPagePage":
-        dataset_name = "FacebookPagePage"
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_facebook_pagepage_dataset(dataset_name)
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_facebook_pagepage_dataset(dataset_choice)
     elif dataset_choice == "Actor":
-        dataset_name = "Actor"
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_actor_dataset(dataset_name)
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_actor_dataset(dataset_choice)
     elif dataset_choice == "LastFMAsia":
-        dataset_name = "LastFMAsia"
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_lastfmasia_dataset(dataset_name)
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_lastfmasia_dataset(dataset_choice)
     elif dataset_choice == "DeezerEurope":
-        dataset_name = "DeezerEurope"
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_deezereurope_dataset(dataset_name)
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_deezereurope_dataset(dataset_choice)
     elif dataset_choice == "Amazon Computers":
-        dataset_name = "Amazon"
-        dataset_type = "Computers"
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_amazon_dataset(dataset_name, dataset_type)
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_amazon_dataset(dataset_choice.split(" ")[0],
+                                                                                           dataset_choice.split(" ")[1])
     elif dataset_choice == "Amazon Photo":
-        dataset_name = "Amazon"
-        dataset_type = "Photo"
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_amazon_dataset(dataset_name, dataset_type)
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_amazon_dataset(dataset_choice.split(" ")[0],
+                                                                                           dataset_choice.split(" ")[1])
     else:
         print("Invalid")
         exit()
@@ -67,7 +56,7 @@ def run_classificaton(dataset_choice):
     # Load the JSON settings
     with open('config.json', 'r') as file:
         settings = json.load(file)
-    config = settings["Node Classification"][dataset_name]
+    config = settings["Node Classification"][dataset_choice]
 
     # ========== training setting ==========
     eta = config["eta"]
@@ -78,63 +67,27 @@ def run_classificaton(dataset_choice):
     lam = eval(config["lam"].replace("^", "**"))
 
     # ========== layers setting ==========
-    relu_func = Func(torch.nn.functional.relu)
-    linear_func = Func(None)
-    sigmoid_func = Func(torch.nn.functional.sigmoid)
-    leaky_relu_func = Func(torch.nn.functional.leaky_relu, negative_slope=0.2)
-    tanh = Func(torch.nn.functional.tanh)
 
-    if dataset_name == "Cora":
-        layers = [
-            LayerParam(layer_config[0]["neurons"], inner_act=linear_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
-                       learning_rate=eval(layer_config[0]["learning_rate"].replace("^", "**")),
-                       order=layer_config[0]["order"], max_iter=layer_config[0]["max_iter"],
-                       lam=lam,batch_size=layer_config[0]["batch_size"]),
-            LayerParam(layer_config[1]["neurons"], inner_act=linear_func, act=relu_func, gnn_type=LayerParam.EGCN,
-                       learning_rate=eval(layer_config[1]["learning_rate"].replace("^", "**")),
-                       order=layer_config[1]["order"], max_iter=layer_config[1]["max_iter"], lam=lam,
-                       batch_size=layer_config[1]["batch_size"]),
-            LayerParam(layer_config[2]["neurons"], inner_act=linear_func, act=linear_func, gnn_type=LayerParam.EGCN,
-                       learning_rate=eval(layer_config[2]["learning_rate"].replace("^", "**")),
-                       order=layer_config[2]["order"], max_iter=layer_config[2]["max_iter"], lam=lam,
-                       batch_size=layer_config[2]["batch_size"]),
-        ]
 
-    elif dataset_name == "Citeseer":
-        layers = [
-            LayerParam(layer_config[0]["neurons"], inner_act=relu_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
-                       learning_rate=eval(layer_config[0]["learning_rate"].replace("^", "**")),
-                       order=layer_config[0]["order"], max_iter=layer_config[0]["max_iter"],
-                       lam=lam, batch_size=layer_config[0]["batch_size"]),
-            LayerParam(layer_config[1]["neurons"], inner_act=relu_func, act=linear_func, gnn_type=LayerParam.EGCN,
-                       learning_rate=eval(layer_config[1]["learning_rate"].replace("^", "**")),
-                       order=layer_config[1]["order"], max_iter=layer_config[1]["max_iter"],
-                       lam=lam, batch_size=layer_config[1]["batch_size"]),
-        ]
+    layer_number = 0
+    layers = []
 
-    elif dataset_name == "PubMed":
-        layers = [
-            LayerParam(layer_config[0]["neurons"], inner_act=relu_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
-                       learning_rate=eval(layer_config[0]["learning_rate"].replace("^", "**")),
-                       order=layer_config[0]["order"], max_iter=layer_config[0]["max_iter"],
-                       lam=lam, batch_size=layer_config[0]["batch_size"]),
-            LayerParam(layer_config[1]["neurons"], inner_act=relu_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
-                       learning_rate=eval(layer_config[1]["learning_rate"].replace("^", "**")),
-                       order=layer_config[1]["order"], max_iter=layer_config[1]["max_iter"],
-                       lam=lam, batch_size=layer_config[1]["batch_size"]),
-        ]
-    elif (dataset_name == "Flickr" or dataset_name == "FacebookPagePage" or dataset_name == "Actor"
-          or dataset_name == "LastFMAsia" or dataset_name == "DeezerEurope" or dataset_name == "Amazon"):
-        layers = [
-            LayerParam(layer_config[0]["neurons"], inner_act=relu_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
-                       learning_rate=eval(layer_config[0]["learning_rate"].replace("^", "**")),
-                       order=layer_config[0]["order"], max_iter=layer_config[0]["max_iter"],
-                       lam=lam, batch_size=layer_config[0]["batch_size"]),
-            LayerParam(layer_config[1]["neurons"], inner_act=relu_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
-                       learning_rate=eval(layer_config[1]["learning_rate"].replace("^", "**")),
-                       order=layer_config[1]["order"], max_iter=layer_config[1]["max_iter"],
-                       lam=lam, batch_size=layer_config[1]["batch_size"]),
-        ]
+
+    for layer in layer_config:
+
+        current_layer_activation = layer["activation"]
+        current_layer_inner_act = layer["inner_act"]
+
+        chosen_act = get_activation(current_layer_activation)
+        chosen_inner_act = get_activation(current_layer_inner_act)
+
+        layer_to_add = LayerParam(layer["neurons"], inner_act=chosen_inner_act, act=chosen_act, gnn_type=LayerParam.EGCN,
+                       learning_rate=eval(layer["learning_rate"].replace("^", "**")),
+                       order=layer["order"], max_iter=layer["max_iter"],
+                       lam=lam,batch_size=layer["batch_size"])
+
+        layers.append(layer_to_add)
+        layer_number = layer_number + 1
 
     # ========== overlook setting ==========
     overlook_rates = None
@@ -179,4 +132,23 @@ def run_classificaton(dataset_choice):
     efficiency = total_seconds / total_iterations
     print(f"Official efficiency: {efficiency}")
 
-    return accuracy, efficiency, dataset_name
+    return accuracy, efficiency, dataset_choice
+
+def get_activation(current_layer_activation):
+
+    if "tanh" in current_layer_activation:
+        chosen_activation = Func(torch.nn.functional.tanh)
+    elif "sigmoid" in current_layer_activation:
+        chosen_activation = Func(torch.nn.functional.sigmoid)
+    elif "linear" in current_layer_activation:
+        chosen_activation = Func(None)
+    elif "leaky" in current_layer_activation:
+        negative_slope = float(current_layer_activation.split("=")[1])
+        chosen_activation = Func(torch.nn.functional.leaky_relu, negative_slope=negative_slope)
+    elif current_layer_activation == "relu":
+        chosen_activation = Func(torch.nn.functional.relu)
+    else:
+        print("Not activation type set")
+        exit()
+
+    return chosen_activation
