@@ -1,22 +1,12 @@
 from run_classification import run_classificaton
 from run import run_clustering
 import argparse
+import json
+from random_hyperparams import sample_hyperparams
 
 
-def main():
+def main(dataset_decision, task_type, exp_times, isTuning):
 
-    parser = argparse.ArgumentParser(description="Example script")
-    parser.add_argument("--name", type=str, required=True, help="Dataset name ()")
-    parser.add_argument("--task", type=str, required=True, help="Classification or Clustering")
-    parser.add_argument("--exp", type=int, required=True, help="How many times do you want to run the exercise")
-    args = parser.parse_args()
-
-    dataset_decision = args.name
-    task_decision = args.task
-    exp_times = args.exp
-
-    average_accuracy = 0
-    average_efficiency = 0
     total_accuracy = 0
     total_efficiency = 0
     total_nmi = 0
@@ -24,28 +14,37 @@ def main():
     efficiency = 0
     nmi = 0
     dataset_name = ""
-    task_name = ""
 
     accuracy_list = []
     efficiency_list = []
     nmi_list = []
 
+    # Load the JSON settings
+
+    if isTuning:
+        config = sample_hyperparams("ranges.json", dataset_decision)
+    else:
+        with open('config.json', 'r') as file:
+            settings = json.load(file)
+            config = settings[task_type][dataset_decision]
+
+    print(json.dumps(config, indent=4))
+
+
     for time in range(exp_times):
         print('========================')
         print('========================')
-        print(f"Running experiment {time + 1}")
+        print(f"Running experiment {time + 1} of {exp_times}")
         print('========================')
         print('========================')
-        if task_decision == 'Clustering':
-            task_name = 'Clustering'
+        if task_type == 'Clustering':
             accuracy, efficiency, nmi, dataset_name = run_clustering(dataset_decision)
             accuracy_list.append(accuracy)
             efficiency_list.append(efficiency)
             nmi_list.append(nmi)
-        elif task_decision == 'Classification':
+        elif task_type == 'Classification':
             nmi = 0
-            task_name = 'Classification'
-            accuracy, efficiency, dataset_name = run_classificaton(dataset_decision)
+            accuracy, efficiency, dataset_name = run_classificaton(dataset_decision, config)
             accuracy_list.append(accuracy)
             efficiency_list.append(efficiency)
 
@@ -63,7 +62,7 @@ def main():
     print('========================')
     print('========================')
     print(f'Dataset used: {dataset_name}')
-    print(f'Task type: {task_name}')
+    print(f'Task type: {task_type}')
     print(f'Experiment count: {exp_times}')
     print(f"All the accuracies: {accuracy_list}")
     print(f"All the efficiencies: {efficiency_list}")
@@ -74,4 +73,16 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Example script")
+    parser.add_argument("--name", type=str, required=True, help="Dataset name ()")
+    parser.add_argument("--task", type=str, required=True, help="Classification or Clustering")
+    parser.add_argument("--exp", type=int, required=True, help="How many times do you want to run the exercise")
+    parser.add_argument("--tuning", action="store_true", help="Disable tuning (default: False)")
+    args = parser.parse_args()
+
+    dataset_decision = args.name
+    task_type = args.task
+    exp_times = args.exp
+    isTuning = args.tuning
+
+    main(dataset_decision, task_type, exp_times, isTuning)

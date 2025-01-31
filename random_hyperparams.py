@@ -1,13 +1,15 @@
 import json
 import random
 
-def sample_hyperparams(filename="ranges.json"):
+def sample_hyperparams(filename, dataset_name):
     """Reads hyperparameter ranges from a JSON file and randomly selects a configuration."""
+
+    random.seed()
+
     with open(filename, "r") as f:
         data = json.load(f)
 
-    dataset = "Actor"  # Change this if needed
-    params = data[dataset]
+    params = data[dataset_name]
 
     # Randomly sample values for global hyperparameters
     sampled_params = {
@@ -26,8 +28,7 @@ def sample_hyperparams(filename="ranges.json"):
             "learning_rate": random.choice(layer["learning_rate"]),
             "order": random.choice(layer["order"]),
             "max_iter": random.choice(layer["max_iter"]),
-            "batch_size": random.choice(layer["batch_size"]),
-            "clip_grad_norm": random.choice(layer["clip_grad_norm"]) if layer["clip_grad_norm"] else None
+            "batch_size": random.choice(layer["batch_size"])
         }
         sampled_params["layers"].append(sampled_layer)
 

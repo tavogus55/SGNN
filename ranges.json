@@ -1,0 +1,36 @@
+{
+  "Actor": {
+    "eta": [100, 200, 300],
+    "BP_count": [5, 7, 9],
+    "lam": ["1e-6", "5e-6", "1e-5"],
+    "layers": [
+      {
+        "neurons": [256, 512, 768],
+        "inner_act": ["relu", "tanh"],
+        "activation": ["relu", "leaky_relu=0.05"],
+        "learning_rate": ["5e-5", "2.5e-5", "1e-5"],
+        "order": [2, 3, 4],
+        "max_iter": [100, 200, 300],
+        "batch_size": [64, 128]
+      },
+      {
+        "neurons": [128, 256, 384],
+        "inner_act": ["relu", "tanh"],
+        "activation": ["relu", "leaky_relu=0.05"],
+        "learning_rate": ["2.5e-5", "1e-5", "5e-6"],
+        "order": [2, 3, 4],
+        "max_iter": [100, 150, 200],
+        "batch_size": [64, 128]
+      },
+      {
+        "neurons": [128, 192, 256],
+        "inner_act": ["relu", "tanh"],
+        "activation": ["relu", "leaky_relu=0.05"],
+        "learning_rate": ["1e-5", "5e-6"],
+        "order": [2, 3],
+        "max_iter": [50, 100, 150],
+        "batch_size": [64, 128]
+      }
+    ]
+  }
+}

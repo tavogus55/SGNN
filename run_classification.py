@@ -17,7 +17,7 @@ print(torch.cuda.is_available())  # Check if CUDA is detected
 print(torch.version.__version__)  # Check PyTorch version
 
 
-def run_classificaton(dataset_choice):
+def run_classificaton(dataset_choice, config):
 
     start_time = datetime.now()
 
@@ -52,11 +52,6 @@ def run_classificaton(dataset_choice):
         features = features.todense()
     features = torch.Tensor(features)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-    # Load the JSON settings
-    with open('config.json', 'r') as file:
-        settings = json.load(file)
-    config = settings["Node Classification"][dataset_choice]
 
     # ========== training setting ==========
     eta = config["eta"]
@@ -108,8 +103,11 @@ def run_classificaton(dataset_choice):
 
     # ========== Testing ==========
     print('============ Start testing ============')
+    print("Training accuracy")
     utils.classification(prediction, labels, train_mask)
+    print("Validation accuracy")
     utils.classification(prediction, labels, val_mask)
+    print("Test accuracy")
     accuracy = utils.classification(prediction, labels, test_mask)
     finish_time = datetime.now()
 

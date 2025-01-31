@@ -1,5 +1,5 @@
 {
-    "Node Clustering": {
+    "Clustering": {
         "Cora": {
             "mask_rate": 0.2,
             "overlook_rates": null,
@@ -188,7 +188,7 @@
             "activation": "linear"
         }
     },
-    "Node Classification": {
+    "Classification": {
         "Cora": {
             "eta": 100,
             "BP_count": 5,
@@ -324,30 +324,39 @@
             ]
        },
         "Actor": {
-            "eta": 200,
-            "BP_count": 5,
-            "lam": "10^-4",
+            "eta": 300,
+            "BP_count": 12,
+            "lam": "1e-6",
             "layers": [
+                {
+                    "neurons": 1024,
+                    "inner_act": "tanh",
+                    "activation": "leaky_relu=0.05",
+                    "learning_rate": "2.5e-5",
+                    "order": 5,
+                    "max_iter": 200,
+                    "batch_size": 128
+                },
                 {
                     "neurons": 512,
                     "inner_act": "relu",
-                    "activation": "leaky_relu=0.2",
-                    "learning_rate": "10^-3",
-                    "order": 2,
-                    "max_iter": 200,
-                    "batch_size": 4096
+                    "activation": "relu",
+                    "learning_rate": "1e-5",
+                    "order": 3,
+                    "max_iter": 150,
+                    "batch_size": 128
                 },
                 {
                     "neurons": 256,
                     "inner_act": "relu",
-                    "activation": "leaky_relu=0.1",
-                    "learning_rate": "10^-4",
-                    "order": 2,
+                    "activation": "leaky_relu=0.05",
+                    "learning_rate": "5e-6",
+                    "order": 3,
                     "max_iter": 100,
-                    "batch_size": 2048
+                    "batch_size": 64
                 }
             ]
-       },
+        },
         "LastFMAsia": {
             "eta": 200,
             "BP_count": 5,
