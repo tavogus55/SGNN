@@ -4,7 +4,7 @@ import argparse
 import json
 from random_hyperparams import sample_hyperparams
 
-def run_experiment(exp_times, config, dataset_decision):
+def run_experiment(exp_times, config, dataset_decision, tuning_file):
 
     for time in range(exp_times):
         accuracy_list = []
@@ -53,6 +53,8 @@ def run_experiment(exp_times, config, dataset_decision):
         print(f"The average accuracy is: {average_accuracy}")
         print(f"The average efficiency is: {average_efficiency}")
         print(f"The average nmi is: {average_nmi}")
+        tuning_file.write(f"All the accuracies: {accuracy_list}")
+        tuning_file.write(f"All the efficiency: {efficiency_list}")
 
         return average_accuracy, average_efficiency, average_nmi
 
@@ -65,6 +67,7 @@ def main(dataset_decision, task_type, exp_times, isTuning):
             config = settings[task_type][dataset_decision]
         run_experiment(exp_times, config, dataset_decision)
     else:
+        f = open(f"tuning_{dataset_decision}_for_{isTuning}_times.txt", "a")
         tuning_accuracy_list = []
         tuning_efficiency_list = []
         for time in range(isTuning):
@@ -75,7 +78,8 @@ def main(dataset_decision, task_type, exp_times, isTuning):
             print('========================')
             config = sample_hyperparams("ranges.json", dataset_decision)
             print(json.dumps(config, indent=4))
-            average_accuracy, average_efficiency, average_nmi = run_experiment(exp_times, config, dataset_decision)
+            f.write(json.dumps(config, indent=4))
+            average_accuracy, average_efficiency, average_nmi = run_experiment(exp_times, config, dataset_decision, f)
             tuning_accuracy_list.append(average_accuracy)
             tuning_efficiency_list.append(average_efficiency)
         print('========================')
