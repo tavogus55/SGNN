@@ -274,27 +274,36 @@
             ]
         },
         "Flickr": {
-            "eta": 200,
-            "BP_count": 5,
-            "lam": "10^-3",
+            "eta": 100,
+            "BP_count": 10,
+            "lam": "10^-4",
             "layers": [
                 {
-                    "neurons": 2024,
-                    "inner_act": "relu",
-                    "activation": "relu",
-                    "learning_rate": "10^-4",
-                    "order": 2,
-                    "max_iter": 300,
-                    "batch_size": 140
-                },
-                {
-                    "neurons": 128,
+                    "neurons": 1024,
                     "inner_act": "linear",
                     "activation": "leaky_relu=0.3",
-                    "learning_rate": "5e-6",
-                    "order": 2,
+                    "learning_rate": "10^-4",
+                    "order": 1,
                     "max_iter": 300,
                     "batch_size": 8192
+                },
+                {
+                    "neurons": 32,
+                    "inner_act": "tanh",
+                    "activation": "leaky_relu=0.2",
+                    "learning_rate": "10^-4",
+                    "order": 1,
+                    "max_iter": 100,
+                    "batch_size": 2048
+                },
+                {
+                    "neurons": 768,
+                    "inner_act": "tanh",
+                    "activation": "linear",
+                    "learning_rate": "5e-5",
+                    "order": 4,
+                    "max_iter": 200,
+                    "batch_size": 1024
                 }
             ]
         },
