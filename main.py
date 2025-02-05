@@ -4,7 +4,7 @@ import argparse
 import json
 from random_hyperparams import sample_hyperparams
 
-def run_experiment(exp_times, config, dataset_decision, tuning_file):
+def run_experiment(exp_times, config, dataset_decision, tuning_file=None):
 
     for time in range(exp_times):
         accuracy_list = []
@@ -53,8 +53,9 @@ def run_experiment(exp_times, config, dataset_decision, tuning_file):
         print(f"The average accuracy is: {average_accuracy}")
         print(f"The average efficiency is: {average_efficiency}")
         print(f"The average nmi is: {average_nmi}")
-        tuning_file.write(f"All the accuracies: {accuracy_list}")
-        tuning_file.write(f"All the efficiency: {efficiency_list}")
+        if isTuning is not None:
+            tuning_file.write(f"All the accuracies: {accuracy_list}")
+            tuning_file.write(f"All the efficiency: {efficiency_list}")
 
         return average_accuracy, average_efficiency, average_nmi
 
