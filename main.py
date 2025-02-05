@@ -5,14 +5,14 @@ import json
 from random_hyperparams import sample_hyperparams
 
 def run_experiment(cuda_num, exp_times, config, dataset_decision, tuning_file=None):
+    accuracy_list = []
+    efficiency_list = []
+    nmi_list = []
+    total_accuracy = 0
+    total_efficiency = 0
+    total_nmi = 0
 
     for time in range(exp_times):
-        accuracy_list = []
-        efficiency_list = []
-        nmi_list = []
-        total_accuracy = 0
-        total_efficiency = 0
-        total_nmi = 0
         accuracy = 0
         efficiency = 0
         nmi = 0
@@ -36,28 +36,28 @@ def run_experiment(cuda_num, exp_times, config, dataset_decision, tuning_file=No
         total_efficiency = total_efficiency + efficiency
         total_nmi = total_nmi + nmi
 
-        average_accuracy = total_accuracy / exp_times
-        average_efficiency = total_efficiency / exp_times
-        average_nmi = total_nmi / exp_times
-        print('========================')
-        print('========================')
-        print(f"Experiment results")
-        print('========================')
-        print('========================')
-        print(f'Dataset used: {dataset_name}')
-        print(f'Task type: {task_type}')
-        print(f'Experiment count: {exp_times}')
-        print(f"All the accuracies: {accuracy_list}")
-        print(f"All the efficiencies: {efficiency_list}")
-        print(f"All the nmi: {nmi_list}")
-        print(f"The average accuracy is: {average_accuracy}")
-        print(f"The average efficiency is: {average_efficiency}")
-        print(f"The average nmi is: {average_nmi}")
-        if isTuning is not None:
-            tuning_file.write(f"All the accuracies: {accuracy_list}")
-            tuning_file.write(f"All the efficiency: {efficiency_list}")
+    average_accuracy = total_accuracy / exp_times
+    average_efficiency = total_efficiency / exp_times
+    average_nmi = total_nmi / exp_times
+    print('========================')
+    print('========================')
+    print(f"Experiment results")
+    print('========================')
+    print('========================')
+    print(f'Dataset used: {dataset_name}')
+    print(f'Task type: {task_type}')
+    print(f'Experiment count: {exp_times}')
+    print(f"All the accuracies: {accuracy_list}")
+    print(f"All the efficiencies: {efficiency_list}")
+    print(f"All the nmi: {nmi_list}")
+    print(f"The average accuracy is: {average_accuracy}")
+    print(f"The average efficiency is: {average_efficiency}")
+    print(f"The average nmi is: {average_nmi}")
+    if isTuning is not None:
+        tuning_file.write(f"All the accuracies: {accuracy_list}")
+        tuning_file.write(f"All the efficiency: {efficiency_list}")
 
-        return average_accuracy, average_efficiency, average_nmi
+    return average_accuracy, average_efficiency, average_nmi
 
 
 def main(cuda_num, dataset_decision, task_type, exp_times, isTuning):
