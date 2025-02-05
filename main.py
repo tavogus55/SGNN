@@ -4,7 +4,7 @@ import argparse
 import json
 from random_hyperparams import sample_hyperparams
 
-def run_experiment(exp_times, config, dataset_decision, tuning_file=None):
+def run_experiment(cuda_num, exp_times, config, dataset_decision, tuning_file=None):
 
     for time in range(exp_times):
         accuracy_list = []
@@ -28,7 +28,7 @@ def run_experiment(exp_times, config, dataset_decision, tuning_file=None):
             nmi_list.append(nmi)
         elif task_type == 'Classification':
             nmi = 0
-            accuracy, efficiency, dataset_name = run_classificaton(dataset_decision, config)
+            accuracy, efficiency, dataset_name = run_classificaton(cuda_num, dataset_decision, config)
             accuracy_list.append(accuracy)
             efficiency_list.append(efficiency)
 
@@ -60,13 +60,13 @@ def run_experiment(exp_times, config, dataset_decision, tuning_file=None):
         return average_accuracy, average_efficiency, average_nmi
 
 
-def main(dataset_decision, task_type, exp_times, isTuning):
+def main(cuda_num, dataset_decision, task_type, exp_times, isTuning):
 
     if isTuning is None:
         with open('config.json', 'r') as file:
             settings = json.load(file)
             config = settings[task_type][dataset_decision]
-        run_experiment(exp_times, config, dataset_decision)
+        run_experiment(cuda_num, exp_times, config, dataset_decision)
     else:
         f = open(f"tuning_{dataset_decision}_for_{isTuning}_times.txt", "a")
         tuning_accuracy_list = []
@@ -80,7 +80,7 @@ def main(dataset_decision, task_type, exp_times, isTuning):
             config = sample_hyperparams("ranges.json", dataset_decision)
             print(json.dumps(config, indent=4))
             f.write(json.dumps(config, indent=4))
-            average_accuracy, average_efficiency, average_nmi = run_experiment(exp_times, config, dataset_decision, f)
+            average_accuracy, average_efficiency, average_nmi = run_experiment(cuda_num, exp_times, config, dataset_decision, f)
             tuning_accuracy_list.append(average_accuracy)
             tuning_efficiency_list.append(average_efficiency)
         print('========================')
@@ -93,16 +93,18 @@ def main(dataset_decision, task_type, exp_times, isTuning):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Example script")
-    parser.add_argument("--name", type=str, required=True, help="Dataset name ()")
+    parser = argparse.ArgumentParser(description="SGNN script")
+    parser.add_argument("--cuda_num", type=str, required=True, help="GPU to use")
+    parser.add_argument("--data", type=str, required=True, help="Dataset name")
     parser.add_argument("--task", type=str, required=True, help="Classification or Clustering")
     parser.add_argument("--exp", type=int, required=True, help="How many times do you want to run the exercise")
     parser.add_argument("--tuning", type=int, help="How many times you want to tune the hyperparameters")
     args = parser.parse_args()
 
-    dataset_decision = args.name
+    cuda_num = args.cuda_num
+    dataset_decision = args.data
     task_type = args.task
     exp_times = args.exp
     isTuning = args.tuning
 
-    main(dataset_decision, task_type, exp_times, isTuning)
+    main(cuda_num, dataset_decision, task_type, exp_times, isTuning)

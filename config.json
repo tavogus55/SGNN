@@ -465,7 +465,78 @@
                     "batch_size": 2048
                 }
             ]
+       },
+        "Reddit": {
+            "eta": 1000,
+            "BP_count": 5,
+            "lam": "10^-6",
+            "layers": [
+                {
+                    "neurons": 128,
+                    "inner_act": "leaky_relu=0.2",
+                    "activation": "linear",
+                    "learning_rate": "10^-4",
+                    "max_iter": 10000,
+                    "batch_size": 512
+                },
+                {
+                    "neurons": 64,
+                    "inner_act": "leaky_relu=0.2",
+                    "activation": "linear",
+                    "learning_rate": "10^-4",
+                    "max_iter": 10000,
+                    "batch_size": 512
+                }
+            ]
+       },
+        "Arxiv": {
+            "eta": 1000,
+            "BP_count": 5,
+            "lam": "10^-6",
+            "layers": [
+                {
+                    "neurons": 128,
+                    "inner_act": "leaky_relu=0.2",
+                    "activation": "linear",
+                    "learning_rate": "10^-4",
+                    "max_iter": 10000,
+                    "batch_size": 512
+                },
+                {
+                    "neurons": 64,
+                    "inner_act": "leaky_relu=0.2",
+                    "activation": "linear",
+                    "learning_rate": "10^-4",
+                    "max_iter": 10000,
+                    "batch_size": 512
+                }
+            ]
+       },
+        "Products": {
+            "eta": 1000,
+            "BP_count": 5,
+            "lam": "10^-6",
+            "layers": [
+                {
+                    "neurons": 128,
+                    "inner_act": "leaky_relu=0.2",
+                    "activation": "linear",
+                    "learning_rate": "10^-4",
+                    "max_iter": 10000,
+                    "batch_size": 512
+                },
+                {
+                    "neurons": 64,
+                    "inner_act": "leaky_relu=0.2",
+                    "activation": "linear",
+                    "learning_rate": "10^-4",
+                    "max_iter": 10000,
+                    "batch_size": 512
+                }
+            ]
        }
+
+
     }
 
 }

@@ -1,6 +1,6 @@
 # Decouple Graph Neural Networks: Train Multiple Simple GNNs Simultaneously Instead of One
 
-This repository is our implementation of 
+This repository is a refactored version of the implementation of 
 
 >   Hongyuan Zhang, Yanan Zhu, and Xuelong Li,  "Decouple Graph Neural Networks: Train Multiple Simple GNNs Simultaneously Instead of One," *IEEE Transactions on Pattern Analysis and Machine Intelligence (T-PAMI)*, DOI: 10.1109/TPAMI.2024.3392782, 2024.[(arXiv)](https://arxiv.org/pdf/2304.10126.pdf)[(IEEE)](https://ieeexplore.ieee.org/document/10507024)
 
@@ -19,7 +19,7 @@ The comparison is summarized in the following table.
 
 
 
-If you have issues, please email:
+For inquiries original work, please contact:
 
 hyzhang98@gmail.com
 
@@ -47,10 +47,21 @@ pip install protobuf==3.20.3
 
 >   Please ensure the data is rightly loaded
 
+Example:
 ```
-python run.py
-python run_classfication.py
+python main.py -cuda_num=0 --data=Reddit --task=Classification --exp=1
 ```
+# SGNN Script Arguments
+
+| Argument      | Type  | Required | Description |
+|--------------|------|----------|-------------|
+| `--cuda_num` | str  | Yes      | Specifies the GPU device to use for computation. |
+| `--data`     | str  | Yes      | Name of the dataset to be used in the experiment. |
+| `--task`     | str  | Yes      | Defines the type of task: `classification` or `clustering`. |
+| `--exp`      | int  | Yes      | Number of times to run the experiment for statistical validation. |
+| `--tuning`   | int  | No       | Number of iterations for hyperparameter tuning (if applicable). |
+
+
 
 ## How to get required data for reddit
 
@@ -64,73 +75,6 @@ reddit_adj.npz: https://drive.google.com/open?id=174vb0Ws7Vxk_QTUtxqTgDHSQ4El4qD
 
 https://snap.stanford.edu/graphsage/reddit.zip
 
-## Settings
-
-### Node Classification
-
-#### Cora
-
-##### 
-
-eta = 100, BP_count=5
-
-```python
-layers = [
-    LayerParam(128, inner_act=linear_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
-               learning_rate=10**-2, order=1, max_iter=60, lam=10**-3, batch_size=2708),
-    LayerParam(64, inner_act=linear_func, act=relu_func, gnn_type=LayerParam.EGCN,
-               learning_rate=10**-2, order=1, max_iter=60, lam=10**-3, batch_size=2708),
-    LayerParam(32, inner_act=linear_func, act=linear_func, gnn_type=LayerParam.EGCN,
-               learning_rate=0.01, order=2, max_iter=60, lam=10**-3, batch_size=140),
-]
-```
-
-
-
-
-
-#### Citeseer
-
-
-
-eta = 100, BP_count = 3
-
-```python
-layers = [
-    LayerParam(256, inner_act=relu_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
-               learning_rate=10**-2, order=1, max_iter=40, lam=10**-3, batch_size=1024),
-    LayerParam(128, inner_act=relu_func, act=linear_func, gnn_type=LayerParam.EGCN,
-               learning_rate=10**-3, order=1, max_iter=40, lam=10**-3, batch_size=140),
-]
-```
-
-
-
-#### Pubmed
-
-##### Setup
-
-eta = 100, BP_count = 3
-
-```python
-layers = [
-    LayerParam(256, inner_act=relu_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
-               learning_rate=10**-2, order=1, max_iter=100, lam=10**-3, batch_size=4096*2),
-    LayerParam(128, inner_act=relu_func, act=leaky_relu_func, gnn_type=LayerParam.EGCN,
-               learning_rate=10**-4, order=2, max_iter=40, lam=10**-3, batch_size=2048),
-]
-```
-
-
-
-### Node Clustering
-
-| Dataset   | mask_rate | overlook_rates | layers         | max_iter | batch | BP_count | learning_rate | lam     | eta  | loss                | order | AU                        | activation             |
-|-----------|-----------|----------------|----------------|----------|-------|----------|---------------|---------|------|---------------------|-------|--------------------------|------------------------|
-| **Cora**  | 0.2       | None           | [128, 64, 32]  | 200      | 128   | 10       | 10^-3         | 10^-6   | 1    | loss1 / sample_size | -     | -                        | -                      |
-| **Pubmed**| 0.2       | None           | [256, 128]     | 100      | 4096  | 10       | 10^-4         | 10^-6   | 10   | loss1               | 2     | relu                     | leaky_relu=5           |
-| **Citeseer**| 0.2     | None           | [256, 128]     | 200      | 256   | 5        | 10^-4         | 10^-6   | 10   | loss1               | 2     | leaky_relu slope=0.2     | linear                 |
-| **Reddit**| 0.2       | None           | [128, 64]      | 10000    | 512   | 5        | 10^-4         | 10^-6   | 10   | loss1               | 2     | relu                     | linear                 |
 
 ## Citation
 ```

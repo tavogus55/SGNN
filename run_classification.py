@@ -8,6 +8,7 @@ import warnings
 import scipy.io as scio
 import json
 from datetime import datetime
+from reddit_utils import load_reddit_data
 
 warnings.filterwarnings('ignore')
 utils.set_seed(0)
@@ -17,7 +18,7 @@ print(torch.cuda.is_available())  # Check if CUDA is detected
 print(torch.version.__version__)  # Check PyTorch version
 
 
-def run_classificaton(dataset_choice, config):
+def run_classificaton(cuda_num, dataset_choice, config):
 
     start_time = datetime.now()
 
@@ -39,19 +40,22 @@ def run_classificaton(dataset_choice, config):
     elif dataset_choice == "Amazon Photo":
         adjacency, features, labels, train_mask, val_mask, test_mask = load_amazon_dataset(dataset_choice.split(" ")[0],
                                                                                            dataset_choice.split(" ")[1])
+    elif dataset_choice == "Reddit":
+        adjacency, _, features, labels, train_mask, val_mask, test_mask = load_reddit_data()
+    elif dataset_choice == "Arxiv":
+        adjacency, _, features, labels, train_mask, val_mask, test_mask = load_ogbn_dataset(dataset_choice.lower())
+    elif dataset_choice == "Products":
+        adjacency, _, features, labels, train_mask, val_mask, test_mask = load_ogbn_dataset(dataset_choice.lower())
     else:
-        print("Invalid")
+        print("Invalid dataset")
         exit()
 
 
-    # train_mask = np.array([True]*features.shape[0])
-    # features, adjacency, labels = load_citeseer_from_mat()
-    # features, adjacency, labels = load_pubmed()
     n_class = np.unique(labels).shape[0]
-    if type(features) is not np.ndarray:
+    if type(features) is not np.ndarray and dataset_choice != "Reddit":
         features = features.todense()
     features = torch.Tensor(features)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
 
     # ========== training setting ==========
     eta = config["eta"]
@@ -76,10 +80,17 @@ def run_classificaton(dataset_choice, config):
         chosen_act = get_activation(current_layer_activation)
         chosen_inner_act = get_activation(current_layer_inner_act)
 
-        layer_to_add = LayerParam(layer["neurons"], inner_act=chosen_inner_act, act=chosen_act, gnn_type=LayerParam.EGCN,
-                       learning_rate=eval(layer["learning_rate"].replace("^", "**")),
-                       order=layer["order"], max_iter=layer["max_iter"],
-                       lam=lam,batch_size=layer["batch_size"])
+        if dataset_choice == "Reddit" or dataset_choice == "Arxiv" or dataset_choice == "Products":
+            layer_to_add = LayerParam(layer["neurons"], inner_act=chosen_inner_act, act=chosen_act,
+                                      gnn_type=LayerParam.EGCN,
+                                      learning_rate=eval(layer["learning_rate"].replace("^", "**")),
+                                      max_iter=layer["max_iter"], lam=lam, batch_size=layer["batch_size"])
+        else:
+            layer_to_add = LayerParam(layer["neurons"], inner_act=chosen_inner_act, act=chosen_act,
+                                      gnn_type=LayerParam.EGCN,
+                                      learning_rate=eval(layer["learning_rate"].replace("^", "**")),
+                                      order=layer["order"], max_iter=layer["max_iter"],
+                                      lam=lam,batch_size=layer["batch_size"])
 
         layers.append(layer_to_add)
         layer_number = layer_number + 1
