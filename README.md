@@ -27,7 +27,20 @@ hyzhang98@gmail.com
 
 ## Requirements 
 
+```
+conda create --name SGNN-geometric-new python=3.11
+conda install pytorch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 pytorch-cuda=12.1 -c pytorch -c nvidia
+pip install torch_geometric
+pip install tensorflow
+pip install networkx
+pip install scikit-learn
+pip install munkres
+pip install ogb
+pip install numpy==1.26.4
+```
 
+
+OLD
 ```
 conda create --name SGNN-geometric-revised python=3.7
 conda activate SGNN-geometric-revised
