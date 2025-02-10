@@ -76,14 +76,13 @@ def main(cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=None
         logger.info(f"All the tuning efficiencies: {tuning_efficiency_list}")
 
 
-
-
-
 if __name__ == "__main__":
+    cuda_num, dataset_decision, task_type, exp_times, logPath, isTuning = set_arg_parser()
+
     # create logger with 'spam_application'
     logger = logging.getLogger("SGNN")
     logging.basicConfig(
-        filename="SGNN.log",
+        filename=logPath,
         level=logging.DEBUG,
         format="%(asctime)s - %(levelname)s - %(message)s"
     )
@@ -96,15 +95,11 @@ if __name__ == "__main__":
 
     logger.addHandler(ch)
 
-    cuda_num, dataset_decision, task_type, exp_times, isTuning = set_arg_parser()
-
     logger.info(f"Using the following arguments:\nCuda device number: {cuda_num}\nDataset: {dataset_decision}"
                 f"\nTask type: {task_type}\nExperiments number: {exp_times}\nTuning: {isTuning}\n")
 
     logger.info(f"CUDA version: {torch.version.cuda}")  # Check the CUDA version supported by PyTorch
     logger.info(f"CUDA active: {torch.cuda.is_available()}")  # Check if CUDA is detected
-    logger.info(f"Pytorch version: {torch.version.__version__}") # Check PyTorch version
-
-
+    logger.info(f"Pytorch version: {torch.version.__version__}")  # Check PyTorch version
 
     main(cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=logger)

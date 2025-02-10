@@ -239,6 +239,7 @@ def set_arg_parser():
     )
     parser.add_argument("--task", type=str, required=True, help="Classification or Clustering")
     parser.add_argument("--exp", type=int, required=True, help="How many times do you want to run the exercise")
+    parser.add_argument("--log_path", type=str, help="Where you want to store the logs")
     parser.add_argument("--tuning", type=int, help="How many times you want to tune the hyperparameters")
     args = parser.parse_args()
 
@@ -246,9 +247,11 @@ def set_arg_parser():
     dataset_decision = args.data
     task_type = args.task
     exp_times = args.exp
-    isTuning = args.tuning
+    log_path = args.log_path
+    is_tuning = args.tuning
 
-    return cuda_num, dataset_decision, task_type, exp_times, isTuning
+    return cuda_num, dataset_decision, task_type, exp_times, log_path, is_tuning
+
 
 class CustomFormatter(logging.Formatter):
 
