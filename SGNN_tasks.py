@@ -5,21 +5,35 @@ from data_loader import *
 import warnings
 from datetime import datetime
 from reddit_utils import load_reddit_data
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.distributed import init_process_group, destroy_process_group
+import os
 
 warnings.filterwarnings('ignore')
 utils.set_seed(0)
 
 
+def ddp_setup(rank, world_size):
+    """
+    Args:
+        rank: Unique identifier of each process
+        world_size: Total number of processes
+    """
+    os.environ["MASTER_ADDR"] = "localhost"
+    os.environ["MASTER_PORT"] = "12355"
+    torch.cuda.set_device(rank)
+    init_process_group(backend="nccl", rank=rank, world_size=world_size)
 
 
-def run_classificaton(cuda_num, dataset_choice, config, logger=None):
+
+def run_classification(rank, world_size, cuda_num, dataset_choice, config, logger):
 
     start_time = datetime.now()
 
     if dataset_choice == "Cora" or dataset_choice == "Citeseer" or dataset_choice == "PubMed":
         adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset_choice)
     elif dataset_choice == "Flickr":
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_flickr_data(dataset_choice)
+        adjacency, features, labels, train_mas, val_mask, test_mask = load_flickr_data(dataset_choice)
     elif dataset_choice == "FacebookPagePage":
         adjacency, features, labels, train_mask, val_mask, test_mask = load_facebook_pagepage_dataset(dataset_choice)
     elif dataset_choice == "Actor":
@@ -65,7 +79,6 @@ def run_classificaton(cuda_num, dataset_choice, config, logger=None):
     layer_number = 0
     layers = []
 
-
     for layer in layer_config:
 
         current_layer_activation = layer["activation"]
@@ -92,8 +105,10 @@ def run_classificaton(cuda_num, dataset_choice, config, logger=None):
     # ========== overlook setting ==========
     overlook_rates = None
 
+    ddp_setup(rank, world_size)
+
     sgnn = SupervisedStackedGNN(features, adjacency, layers,
-                                training_mask=train_mask, val_mask=test_mask,
+                                train_mask, rank, val_mask=test_mask,
                                 overlooked_rates=overlook_rates,
                                 BP_count=BP_count, eta=eta, device=device,
                                 labels=labels, metric_func=utils.classification, logger=logger)
@@ -113,6 +128,8 @@ def run_classificaton(cuda_num, dataset_choice, config, logger=None):
     logger.info("Test accuracy")
     accuracy = utils.classification(prediction, labels, test_mask, logger=logger)
     finish_time = datetime.now()
+
+    destroy_process_group()
 
     time_difference = finish_time - start_time
 
@@ -134,6 +151,7 @@ def run_classificaton(cuda_num, dataset_choice, config, logger=None):
     logger.info(f"Official efficiency: {efficiency}")
 
     return accuracy, efficiency, dataset_choice
+
 
 def run_clustering(dataset_choice, config):
     dataset_name = None

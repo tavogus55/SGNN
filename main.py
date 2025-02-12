@@ -1,10 +1,11 @@
-from SGNN_tasks import run_classificaton, run_clustering
+from SGNN_tasks import run_classification, run_clustering
 import json
 from utils import sample_hyperparams, set_arg_parser, CustomFormatter
 import logging
 import torch
+import torch.multiprocessing as mp
 
-def run_experiment(cuda_num, exp_times, config, dataset_decision, tuning_file=None, logger=None):
+def run_experiment(world_size, cuda_num, exp_times, config, dataset_decision, tuning_file=None, logger=None):
     accuracy_list = []
     efficiency_list = []
     nmi_list = []
@@ -24,7 +25,8 @@ def run_experiment(cuda_num, exp_times, config, dataset_decision, tuning_file=No
             nmi_list.append(nmi)
         elif task_type == 'Classification':
             nmi = 0
-            accuracy, efficiency, dataset_name = run_classificaton(cuda_num, dataset_decision, config, logger=logger)
+            mp.spawn(run_classification, args=(world_size, cuda_num, dataset_decision, config, logger), nprocs=world_size,
+                     join=True)
             accuracy_list.append(accuracy)
             efficiency_list.append(efficiency)
 
@@ -52,13 +54,13 @@ def run_experiment(cuda_num, exp_times, config, dataset_decision, tuning_file=No
     return average_accuracy, average_efficiency, average_nmi
 
 
-def main(cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=None):
+def main(world_size, cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=None):
 
     if isTuning is None:
         with open('./config.json', 'r') as file:
             settings = json.load(file)
             config = settings[task_type][dataset_decision]
-        run_experiment(cuda_num, exp_times, config, dataset_decision, logger=logger)
+        run_experiment(world_size, cuda_num, exp_times, config, dataset_decision, logger=logger)
     else:
         f = open(f"./logs/tuning/tuning_{dataset_decision}_for_{isTuning}_times.txt", "a")
         tuning_accuracy_list = []
@@ -68,7 +70,7 @@ def main(cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=None
             config = sample_hyperparams("ranges.json", dataset_decision)
             logger.info(json.dumps(config, indent=4))
             f.write(json.dumps(config, indent=4))
-            average_accuracy, average_efficiency, average_nmi = run_experiment(cuda_num, exp_times, config,
+            average_accuracy, average_efficiency, average_nmi = run_experiment(world_size, cuda_num, exp_times, config,
                                                                                dataset_decision, f, logger=logger)
             tuning_accuracy_list.append(average_accuracy)
             tuning_efficiency_list.append(average_efficiency)
@@ -78,6 +80,8 @@ def main(cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=None
 
 if __name__ == "__main__":
     cuda_num, dataset_decision, task_type, exp_times, logPath, isTuning = set_arg_parser()
+
+    world_size = torch.cuda.device_count()
 
     # create logger with 'spam_application'
     logger = logging.getLogger("SGNN")
@@ -102,4 +106,4 @@ if __name__ == "__main__":
     logger.info(f"CUDA active: {torch.cuda.is_available()}")  # Check if CUDA is detected
     logger.info(f"Pytorch version: {torch.version.__version__}")  # Check PyTorch version
 
-    main(cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=logger)
+    main(world_size, cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=logger)

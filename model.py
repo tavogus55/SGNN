@@ -8,7 +8,7 @@ import scipy.sparse as sp
 import math
 import scipy.io as scio
 # from gat import GraphAttentionLayer
-
+from torch.nn.parallel import DistributedDataParallel as DDP
 
 RIDGE = 0
 LASSO = 1
@@ -455,7 +455,7 @@ class SingleLayerEmbeddingGCN(SingleLayerGNN):
 
 
 class StackedGNN:
-    def __init__(self, content, adjacency, layers,
+    def __init__(self, content, adjacency, layers, rank,
                  overlooked_rates=None, eta=1, BP_count=0,
                  device=None, labels=None, metric_func=None, logger=None):
         # super(StackedGAE, self).__init__()
@@ -466,6 +466,7 @@ class StackedGNN:
         self.layers = layers
         self.gnn_count = len(self.layers)
         self.eta = eta
+        self.rank = rank  # Store rank for DDP
         if device is None:
             self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         else:
@@ -494,7 +495,11 @@ class StackedGNN:
             overlooked_rate = self.overlooked_rates[i]
             gnn = None
             if layer_param.gnn_type is LayerParam.GAE:
-                gnn = self._build_unsupervised_GNN(input_dim, layer_param, overlooked_rate)
+                for i in range(self.gnn_count):
+                    layer_param = self.layers[i]
+                    overlooked_rate = self.overlooked_rates[i]
+                    gnn = self._build_unsupervised_GNN(input_dim, layer_param, overlooked_rate)
+                    self.gnns.append(gnn)
             elif layer_param.gnn_type is LayerParam.GCN:
                 gnn = self._build_supervised_GNN(input_dim, layer_param, overlooked_rate)
             elif layer_param.gnn_type is LayerParam.EGCN:
@@ -513,11 +518,17 @@ class StackedGNN:
         max_iter = layer_param.get('max_iter', 10)
         lam = layer_param.get('lam', 0)
         batch_size = layer_param.get('batch_size', 64)
-        return SingleLayerGAE(self.adjacency, self.adjacency_tensor, input_dim, embedding_dim, lam=lam,
-                              learning_rate=learning_rate, max_iter=max_iter, device=self.device,
-                              batch_size=batch_size, inner_activation=inner_activation, activation=activation,
-                              regularization=LASSO, mask_rate=mask_rate, overlooked_rate=overlooked_rate,
-                              order=conv_order)
+        gnn = SingleLayerGAE(
+            self.adjacency, self.adjacency_tensor, input_dim, embedding_dim,
+            lam=lam, learning_rate=learning_rate, max_iter=max_iter,
+            device=self.device, batch_size=batch_size,
+            inner_activation=inner_activation, activation=activation,
+            regularization=LASSO, mask_rate=mask_rate,
+            overlooked_rate=overlooked_rate, order=conv_order).to(self.rank)
+
+        gnn = DDP(gnn, device_ids=[self.rank])
+
+        return gnn
 
     def _build_supervised_GNN(self, input_dim, layer_param, overlooked_rate=0.0):
         pass
@@ -602,14 +613,14 @@ class StackedGNN:
 
 
 class SupervisedStackedGNN(StackedGNN):
-    def __init__(self, content, adjacency, layers, training_mask, val_mask=None,
+    def __init__(self, content, adjacency, layers, training_mask, rank, val_mask=None,
                  labels=None, overlooked_rates=None, eta=1,
                  BP_count=0, device=None,  metric_func=None, logger=None):
         assert labels is not None
         self.training_mask = training_mask
         self.val_mask = val_mask if val_mask is not None else self.training_mask
 
-        super().__init__(content, adjacency, layers,
+        super().__init__(content, adjacency, layers, rank,
                          overlooked_rates=overlooked_rates, eta=eta, BP_count=BP_count,
                          device=device, labels=labels, metric_func=metric_func, logger=logger)
 
