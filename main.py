@@ -4,7 +4,8 @@ from utils import sample_hyperparams, set_arg_parser, CustomFormatter
 import logging
 import torch
 
-def run_experiment(cuda_num, exp_times, config, dataset_decision, tuning_file=None, logger=None):
+
+def run_experiment(cuda_num, exp_times, config, dataset_decision, logger=None):
     accuracy_list = []
     efficiency_list = []
     nmi_list = []
@@ -45,9 +46,6 @@ def run_experiment(cuda_num, exp_times, config, dataset_decision, tuning_file=No
     logger.info(f"The average accuracy is: {average_accuracy}")
     logger.info(f"The average efficiency is: {average_efficiency}")
     logger.info(f"The average nmi is: {average_nmi}")
-    if isTuning is not None:
-        tuning_file.write(f"All the accuracies: {accuracy_list}")
-        tuning_file.write(f"All the efficiency: {efficiency_list}")
 
     return average_accuracy, average_efficiency, average_nmi
 
@@ -60,20 +58,20 @@ def main(cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=None
             config = settings[task_type][dataset_decision]
         run_experiment(cuda_num, exp_times, config, dataset_decision, logger=logger)
     else:
-        f = open(f"./logs/tuning/tuning_{dataset_decision}_for_{isTuning}_times.txt", "a")
         tuning_accuracy_list = []
         tuning_efficiency_list = []
         for time in range(isTuning):
             logger.info(f"\n=======\nRunning hyperparameter tuning {time + 1} of {isTuning}\n=======")
             config = sample_hyperparams("ranges.json", dataset_decision)
             logger.info(json.dumps(config, indent=4))
-            f.write(json.dumps(config, indent=4))
             average_accuracy, average_efficiency, average_nmi = run_experiment(cuda_num, exp_times, config,
-                                                                               dataset_decision, f, logger=logger)
+                                                                               dataset_decision, logger=logger)
             tuning_accuracy_list.append(average_accuracy)
             tuning_efficiency_list.append(average_efficiency)
         logger.info(f"All the tuning accuracies: {tuning_accuracy_list}")
+        logger.info(f"Best accuracy: {max(tuning_accuracy_list)}")
         logger.info(f"All the tuning efficiencies: {tuning_efficiency_list}")
+        logger.info(f"Best efficiency: {min(tuning_efficiency_list)}")
 
 
 if __name__ == "__main__":
