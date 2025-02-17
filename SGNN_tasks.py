@@ -40,13 +40,15 @@ def run_classificaton(cuda_num, dataset_choice, config, logger=None):
         adjacency, _, features, labels, train_mask, val_mask, test_mask = load_ogbn_dataset(dataset_choice.lower())
     elif dataset_choice == "Products":
         adjacency, _, features, labels, train_mask, val_mask, test_mask = load_ogbn_dataset(dataset_choice.lower())
+    elif dataset_choice == "Mag":
+        adjacency, _, features, labels, train_mask, val_mask, test_mask = load_ogbn_dataset(dataset_choice.lower())
     else:
         print("Invalid dataset")
         exit()
 
 
     n_class = np.unique(labels).shape[0]
-    if type(features) is not np.ndarray and dataset_choice != "Reddit":
+    if type(features) is not np.ndarray and dataset_choice != "Reddit" and dataset_choice != "Mag":
         features = features.todense()
     features = torch.Tensor(features)
     device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
@@ -74,7 +76,8 @@ def run_classificaton(cuda_num, dataset_choice, config, logger=None):
         chosen_act = get_activation(current_layer_activation)
         chosen_inner_act = get_activation(current_layer_inner_act)
 
-        if dataset_choice == "Reddit" or dataset_choice == "Arxiv" or dataset_choice == "Products":
+        if (dataset_choice == "Reddit" or dataset_choice == "Arxiv" or dataset_choice == "Products"
+                or dataset_choice == "Mag"):
             layer_to_add = LayerParam(layer["neurons"], inner_act=chosen_inner_act, act=chosen_act,
                                       gnn_type=LayerParam.EGCN,
                                       learning_rate=eval(layer["learning_rate"].replace("^", "**")),

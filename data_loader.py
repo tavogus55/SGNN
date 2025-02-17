@@ -15,27 +15,42 @@ THREE_RINGS = 'three_rings'
 
 
 def load_ogbn_dataset(dataset_n):
-    # Load the OGBN-Arxiv dataset
+
     dataset_name = f'ogbn-{dataset_n}'
     dataset = PygNodePropPredDataset(name=dataset_name, root='data/')
-    data = dataset[0]  # Get the graph data object
-    split_idx = dataset.get_idx_split()  # Get train/val/test splits
+    data = dataset[0]  # For OGBN-MAG, this is a HeteroData object
+    split_idx = dataset.get_idx_split()
 
-    # Adjacency matrix
-    full_adj = to_scipy_sparse_matrix(data.edge_index, num_nodes=data.num_nodes)
+    if dataset_n.lower() == 'mag':
+        # 1) Features & labels
+        features = data.x_dict['paper']  # shape [num_papers, num_features]
+        labels = data.y_dict['paper'].view(-1)  # shape [num_papers]
 
-    # Features (node features)
-    features = data.x.numpy()  # Convert PyTorch tensor to numpy array
+        # 2) Number of paper nodes
+        num_nodes = features.size(0)  # or features.shape[0]
 
-    # Labels
-    labels = data.y.squeeze().numpy()  # Convert to 1D array
+        # 3) Citation edges among papers
+        edge_index = data.edge_index_dict[('paper', 'cites', 'paper')]
 
-    # Train/validation/test indices
-    train_index = split_idx['train']
-    val_index = split_idx['valid']
-    test_index = split_idx['test']
+        # 4) Train/val/test splits for "paper" nodes
+        train_index = split_idx['train']['paper']
+        val_index = split_idx['valid']['paper']
+        test_index = split_idx['test']['paper']
+    else:
+        # --- Homogeneous access for Arxiv/Products ---
+        features = data.x.numpy()
+        labels = data.y.squeeze().numpy()
+        edge_index = data.edge_index
+        num_nodes = data.num_nodes
 
-    return full_adj, data.num_nodes, features, labels, train_index, val_index, test_index
+        train_index = split_idx['train']
+        val_index = split_idx['valid']
+        test_index = split_idx['test']
+
+    # Convert edge_index to a SciPy sparse adjacency matrix:
+    full_adj = to_scipy_sparse_matrix(edge_index, num_nodes=num_nodes)
+
+    return full_adj, num_nodes, features, labels, train_index, val_index, test_index
 
 
 def load_flickr_data(dataset):

@@ -225,7 +225,8 @@ def set_arg_parser():
         "Amazon Photo",
         "Reddit",
         "Arxiv",
-        "Products"
+        "Products",
+        "Mag"
     ]
 
     parser = argparse.ArgumentParser(description="SGNN script")
