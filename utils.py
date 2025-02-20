@@ -226,7 +226,8 @@ def set_arg_parser():
         "Reddit",
         "Arxiv",
         "Products",
-        "Mag"
+        "Mag",
+        "Yelp"
     ]
 
     parser = argparse.ArgumentParser(description="SGNN script")
@@ -276,3 +277,22 @@ class CustomFormatter(logging.Formatter):
         log_fmt = self.FORMATS.get(record.levelno)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
+
+def get_logger(name, log_path):
+
+    logger = logging.getLogger(name)
+    logging.basicConfig(
+        filename=log_path,
+        level=logging.DEBUG,
+        format="%(asctime)s - %(levelname)s - %(message)s"
+    )
+
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+
+    ch.setFormatter(CustomFormatter())
+
+    logger.addHandler(ch)
+
+    return logger

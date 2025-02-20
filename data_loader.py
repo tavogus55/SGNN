@@ -6,8 +6,10 @@ import networkx as nx
 import sys
 from ogb.nodeproppred import PygNodePropPredDataset
 from torch_geometric.utils import to_scipy_sparse_matrix
+from torch_geometric.datasets import Yelp
 import numpy as np
 import json
+import torch
 
 YALE = 'Yale'
 UMIST = 'UMIST'
@@ -95,49 +97,30 @@ def load_flickr_data(dataset):
     return adj, features, labels, train_mask, val_mask, test_mask
 
 
-def load_yelp_data(dataset):
-    """
-    Loads the Yelp dataset from the given file structure.
+def load_yelp_data():
 
-    Returns:
-        adj: Sparse adjacency matrix (scipy.sparse.csr_matrix).
-        features: Feature matrix (numpy.ndarray).
-        labels: Labels (numpy.ndarray).
-        train_mask: Training mask (numpy.ndarray).
-        val_mask: Validation mask (numpy.ndarray).
-        test_mask: Test mask (numpy.ndarray).
-    """
-    # Paths to the raw Yelp data
-    raw_dir = f"./data/{dataset}/raw/"
+    dataset = Yelp(root='./data/Yelp')
+    data = dataset[0]
 
-    # Load data
-    adj_full = sp.load_npz(raw_dir + "adj_full.npz")
-    features = np.load(raw_dir + "feats.npy")
-    with open(raw_dir + "class_map.json") as f:
-        class_map = json.load(f)
-    with open(raw_dir + "role.json") as f:
-        roles = json.load(f)
+    # Convert multi-label to single-label (pick the dominant label)
+    labels = data.y.argmax(dim=1)
 
-    # Map labels to a continuous range starting from 0
-    class_map_values = list(class_map.values())
-    unique_classes = sorted(set(class_map_values))
-    class_mapping = {c: idx for idx, c in enumerate(unique_classes)}
-    labels = np.array([class_mapping[class_map[str(i)]] for i in range(len(class_map))], dtype=np.int64)
+    # Remap labels to ensure they are sequential from 0 to num_classes-1
+    unique_classes = torch.unique(labels)
+    mapping = {old_label.item(): new_label for new_label, old_label in enumerate(unique_classes)}
+    labels = torch.tensor([mapping[label.item()] for label in labels], dtype=torch.long)
 
-    # Create train, val, and test masks
-    num_nodes = len(labels)
-    train_mask = np.zeros(num_nodes, dtype=bool)
-    val_mask = np.zeros(num_nodes, dtype=bool)
-    test_mask = np.zeros(num_nodes, dtype=bool)
+    # Convert adjacency to sparse matrix
+    adjacency = to_scipy_sparse_matrix(data.edge_index, num_nodes=data.num_nodes)
 
-    train_mask[roles["tr"]] = True
-    val_mask[roles["va"]] = True
-    test_mask[roles["te"]] = True
+    # Extract features
+    features = data.x
 
-    # Create adjacency matrix
-    adj = sp.csr_matrix(adj_full)  # Ensure it is in CSR format
+    # Extract masks
+    train_mask, val_mask, test_mask = data.train_mask, data.val_mask, data.test_mask
 
-    return adj, features, labels, train_mask, val_mask, test_mask
+    return adjacency, features, labels, train_mask, val_mask, test_mask
+
 
 def load_facebook_pagepage_dataset(dataset):
     """
