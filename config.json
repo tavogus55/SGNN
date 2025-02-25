@@ -197,7 +197,7 @@
                 {
                     "neurons": 128,
                     "inner_act": "linear",
-                    "activation": "leaky_relu=0.3",
+                    "activation": "leaky_relu=0.2",
                     "order": 1,
                     "batch_size": 2708,
                     "learning_rate": "10^-2",

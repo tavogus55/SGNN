@@ -87,7 +87,7 @@ def main(cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=None
 if __name__ == "__main__":
     cuda_num, dataset_decision, task_type, exp_times, logPath, isTuning = set_arg_parser()
     if "local_1" in logPath:
-        logPath = f"./logs/SGNN_{dataset_decision}"
+        logPath = f"./logs/SGNN_{dataset_decision}.log"
 
     logger = get_logger(f"SGNN", logPath)
 

@@ -92,7 +92,7 @@ def load_flickr_data(dataset):
     test_mask[roles["te"]] = True
 
     # Create adjacency matrix
-    adj = nx.adjacency_matrix(nx.from_scipy_sparse_matrix(adj_full))
+    adj = nx.adjacency_matrix(nx.from_scipy_sparse_array(adj_full))
 
     return adj, features, labels, train_mask, val_mask, test_mask
 
