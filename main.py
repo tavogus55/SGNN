@@ -1,10 +1,10 @@
-from SGNN_tasks import run_classificaton, run_clustering
+from GNN_tasks import run_classificaton, run_clustering
 import json
 from utils import sample_hyperparams, set_arg_parser, get_logger
 import torch
 
 
-def run_experiment(cuda_num, exp_times, config, dataset_decision, logger=None):
+def run_experiment(cuda_num, exp_times, config, dataset_decision, model_decision, logger=None):
     accuracy_list = []
     efficiency_list = []
     nmi_list = []
@@ -18,15 +18,17 @@ def run_experiment(cuda_num, exp_times, config, dataset_decision, logger=None):
         accuracy = 0
         efficiency = 0
         nmi = 0
+        time_taken = 0
         logger.info(f"Running experiment {time + 1} of {exp_times}")
         if task_type == 'Clustering':
-            accuracy, efficiency, nmi, dataset_name = run_clustering(dataset_decision, config)
+            if model_decision == 'SGNN':
+                accuracy, efficiency, nmi, dataset_name = run_clustering(dataset_decision, config)
             accuracy_list.append(accuracy)
             efficiency_list.append(efficiency)
             nmi_list.append(nmi)
         elif task_type == 'Classification':
-            nmi = 0
-            accuracy, efficiency, dataset_name, time_taken = run_classificaton(cuda_num, dataset_decision, config, logger=logger)
+            if model_decision == 'SGNN':
+                accuracy, efficiency, dataset_name, time_taken = run_classificaton(cuda_num, dataset_decision, config, logger=logger)
             accuracy_list.append(accuracy)
             efficiency_list.append(efficiency)
             time_taken_list.append(time_taken)
@@ -42,6 +44,7 @@ def run_experiment(cuda_num, exp_times, config, dataset_decision, logger=None):
     average_nmi = total_nmi / exp_times
     logger.info(f"\nEXPERIMENT RESULTS")
     logger.info(f'Dataset used: {dataset_name}')
+    logger.info(f'Model used: {model_decision}')
     logger.info(f'Task type: {task_type}')
     logger.info(f'Experiment count: {exp_times}')
     logger.info(f"All the accuracies: {accuracy_list}")
@@ -56,13 +59,13 @@ def run_experiment(cuda_num, exp_times, config, dataset_decision, logger=None):
     return average_accuracy, average_efficiency, average_nmi, average_time_taken
 
 
-def main(cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=None):
+def main(cuda_num, dataset_decision, model_decision, task_type, exp_times, isTuning, logger=None):
 
     if isTuning is None:
         with open('./config.json', 'r') as file:
             settings = json.load(file)
             config = settings[task_type][dataset_decision]
-        run_experiment(cuda_num, exp_times, config, dataset_decision, logger=logger)
+        run_experiment(cuda_num, exp_times, config, dataset_decision, model_decision, logger=logger)
     else:
         tuning_accuracy_list = []
         tuning_efficiency_list = []
@@ -71,8 +74,11 @@ def main(cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=None
             logger.info(f"\n=======\nRunning hyperparameter tuning {time + 1} of {isTuning}\n=======")
             config = sample_hyperparams("ranges.json", dataset_decision)
             logger.info(json.dumps(config, indent=4))
-            average_accuracy, average_efficiency, average_nmi, average_time_taken = run_experiment(cuda_num, exp_times, config,
-                                                                               dataset_decision, logger=logger)
+            average_accuracy, average_efficiency, average_nmi, average_time_taken = run_experiment(cuda_num, exp_times,
+                                                                                                   config,
+                                                                                                   dataset_decision,
+                                                                                                   model_decision,
+                                                                                                   logger=logger)
             tuning_accuracy_list.append(average_accuracy)
             tuning_efficiency_list.append(average_efficiency)
             tuning_time_taken_list.append(average_time_taken)
@@ -85,14 +91,14 @@ def main(cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=None
 
 
 if __name__ == "__main__":
-    cuda_num, dataset_decision, task_type, exp_times, logPath, isTuning = set_arg_parser()
+    cuda_num, dataset_decision, model_decision, task_type, exp_times, logPath, isTuning = set_arg_parser()
     if "local_1" in logPath:
-        logPath = f"./logs/SGNN_{dataset_decision}.log"
+        logPath = f"./logs/{model_decision}_{dataset_decision}.log"
 
-    logger = get_logger(f"SGNN", logPath)
+    logger = get_logger(f"{model_decision}", logPath)
 
     logger.info(f"CUDA version: {torch.version.cuda}")  # Check the CUDA version supported by PyTorch
     logger.info(f"CUDA active: {torch.cuda.is_available()}")  # Check if CUDA is detected
     logger.info(f"Pytorch version: {torch.version.__version__}")  # Check PyTorch version
 
-    main(cuda_num, dataset_decision, task_type, exp_times, isTuning, logger=logger)
+    main(cuda_num, dataset_decision, model_decision, task_type, exp_times, isTuning, logger=logger)

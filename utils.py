@@ -229,9 +229,21 @@ def set_arg_parser():
         "Mag",
         "Yelp"
     ]
+    ALLOWED_MODELS = [
+        "SGNN",
+        "GCN",
+        "SGC"
+    ]
 
     parser = argparse.ArgumentParser(description="SGNN script")
     parser.add_argument("--cuda_num", type=str, required=True, help="GPU to use")
+    parser.add_argument(
+        "--model",
+        type=str,
+        choices=ALLOWED_MODELS,  # Restricts choices
+        required=True,
+        help=f"Model name (choices: {', '.join(ALLOWED_MODELS)})"
+    )
     parser.add_argument(
         "--data",
         type=str,
@@ -247,12 +259,13 @@ def set_arg_parser():
 
     cuda_num = args.cuda_num
     dataset_decision = args.data
+    model_decision = args.model
     task_type = args.task
     exp_times = args.exp
     log_path = args.log_path
     is_tuning = args.tuning
 
-    return cuda_num, dataset_decision, task_type, exp_times, log_path, is_tuning
+    return cuda_num, dataset_decision, model_decision, task_type, exp_times, log_path, is_tuning
 
 
 class CustomFormatter(logging.Formatter):
