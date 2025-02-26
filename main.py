@@ -1,4 +1,4 @@
-from GNN_tasks import run_classificaton, run_clustering
+from GNN_tasks import run_classificaton_with_SGNN, run_clustering_with_SGNN, run_classification_with_SGC
 import json
 from utils import sample_hyperparams, set_arg_parser, get_logger
 import torch
@@ -22,13 +22,17 @@ def run_experiment(cuda_num, exp_times, config, dataset_decision, model_decision
         logger.info(f"Running experiment {time + 1} of {exp_times}")
         if task_type == 'Clustering':
             if model_decision == 'SGNN':
-                accuracy, efficiency, nmi, dataset_name = run_clustering(dataset_decision, config)
+                accuracy, efficiency, nmi, dataset_name = run_clustering_with_SGNN(dataset_decision, config)
             accuracy_list.append(accuracy)
             efficiency_list.append(efficiency)
             nmi_list.append(nmi)
         elif task_type == 'Classification':
             if model_decision == 'SGNN':
-                accuracy, efficiency, dataset_name, time_taken = run_classificaton(cuda_num, dataset_decision, config, logger=logger)
+                accuracy, efficiency, dataset_name, time_taken = run_classificaton_with_SGNN(cuda_num, dataset_decision, config, logger=logger)
+            elif model_decision == 'SGC':
+                run_classification_with_SGC(cuda_num, dataset_decision, config, logger=logger)
+            else:
+                exit()
             accuracy_list.append(accuracy)
             efficiency_list.append(efficiency)
             time_taken_list.append(time_taken)

@@ -26,7 +26,10 @@ import sklearn.preprocessing
 # import tensorflow.compat.v1 as tf
 # from tensorflow.compat.v1 import gfile
 import torch
-
+from torch_geometric.utils import to_scipy_sparse_matrix, from_scipy_sparse_matrix
+from torch_geometric.datasets import (Planetoid, Reddit, Flickr, FacebookPagePage, Actor, LastFMAsia, DeezerEurope,
+                                      Amazon, Yelp)
+from torch_geometric.data import Data
 #
 # def parse_index_file(filename):
 #     """Parse index file."""
@@ -285,15 +288,29 @@ def loadRedditFromNPZ(dataset_dir):
 
 def load_reddit_data(normalization="AugNormAdj", cuda=True):
     adj, features, y_train, y_val, y_test, train_index, val_index, test_index = loadRedditFromNPZ("data/")
+
     labels = np.zeros(adj.shape[0])
     labels[train_index] = y_train
     labels[val_index] = y_val
     labels[test_index] = y_test
-    adj = adj + adj.T
-    train_adj = adj[train_index, :][:, train_index]
-    features = torch.FloatTensor(np.array(features))
+
+    # Convert adjacency matrix to edge_index format
+    adj = adj + adj.T  # Ensure symmetry
+    edge_index, _ = from_scipy_sparse_matrix(adj)
+
+    # Normalize features
+    features = torch.FloatTensor(features)
     features = (features - features.mean(dim=0)) / features.std(dim=0)
-    return adj, train_adj, features, labels, train_index, val_index, test_index
+
+    labels = torch.LongTensor(labels)
+    train_mask = torch.BoolTensor(np.isin(np.arange(len(labels)), train_index))
+    val_mask = torch.BoolTensor(np.isin(np.arange(len(labels)), val_index))
+    test_mask = torch.BoolTensor(np.isin(np.arange(len(labels)), test_index))
+
+    # Create PyG Data object
+    data = Data(x=features, edge_index=edge_index, y=labels, train_mask=train_mask, val_mask=val_mask, test_mask=test_mask)
+
+    return data  # Returning a single Data object
 
 
 def aug_normalized_adjacency(adj):

@@ -10,10 +10,56 @@ from torch_geometric.datasets import Yelp
 import numpy as np
 import json
 import torch
+from reddit_utils import load_reddit_data
 
 YALE = 'Yale'
 UMIST = 'UMIST'
 THREE_RINGS = 'three_rings'
+
+
+def get_training_data(dataset_choice):
+
+    adjacency = None
+    features = None
+    labels = None
+    train_mask = None
+    val_mask = None
+    test_mask = None
+    edge_index = None
+
+    if dataset_choice == "Cora" or dataset_choice == "Citeseer" or dataset_choice == "PubMed":
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset_choice)
+    elif dataset_choice == "Flickr":
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_flickr_data(dataset_choice)
+    elif dataset_choice == "FacebookPagePage":
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_facebook_pagepage_dataset(dataset_choice)
+    elif dataset_choice == "Actor":
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_actor_dataset(dataset_choice)
+    elif dataset_choice == "LastFMAsia":
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_lastfmasia_dataset(dataset_choice)
+    elif dataset_choice == "DeezerEurope":
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_deezereurope_dataset(dataset_choice)
+    elif dataset_choice == "Amazon Computers":
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_amazon_dataset(dataset_choice.split(" ")[0],
+                                                                                           dataset_choice.split(" ")[1])
+    elif dataset_choice == "Amazon Photo":
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_amazon_dataset(dataset_choice.split(" ")[0],
+                                                                                           dataset_choice.split(" ")[1])
+    elif dataset_choice == "Reddit":
+        edge_index, adjacency, _, features, labels, train_mask, val_mask, test_mask = load_reddit_data(dataset_choice)
+    elif dataset_choice == "Yelp":
+        adjacency, features, labels, train_mask, val_mask, test_mask = load_yelp_data()
+    elif dataset_choice == "Arxiv":
+        adjacency, _, features, labels, train_mask, val_mask, test_mask = load_ogbn_dataset(dataset_choice.lower())
+    elif dataset_choice == "Products":
+        adjacency, _, features, labels, train_mask, val_mask, test_mask = load_ogbn_dataset(dataset_choice.lower())
+    elif dataset_choice == "Mag":
+        adjacency, _, features, labels, train_mask, val_mask, test_mask = load_ogbn_dataset(dataset_choice.lower())
+    else:
+        print("Invalid dataset")
+        exit()
+
+    return adjacency, features, labels, train_mask, val_mask, test_mask, edge_index
 
 
 def load_ogbn_dataset(dataset_n):

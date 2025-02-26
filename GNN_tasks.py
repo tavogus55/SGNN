@@ -1,9 +1,10 @@
 from torch.fx.passes.infra.partitioner import logger
-
-from model import *
-from data_loader import *
+from model.SGC import SGC, train, test
+from model.SGNN import *
+from data_loader import get_training_data
 import warnings
 from datetime import datetime
+from torch_geometric.loader import NeighborLoader
 from reddit_utils import load_reddit_data
 
 warnings.filterwarnings('ignore')
@@ -11,43 +12,11 @@ utils.set_seed(0)
 
 
 
-
-def run_classificaton(cuda_num, dataset_choice, config, logger=None):
+def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
 
     start_time = datetime.now()
 
-    if dataset_choice == "Cora" or dataset_choice == "Citeseer" or dataset_choice == "PubMed":
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_data(dataset_choice)
-    elif dataset_choice == "Flickr":
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_flickr_data(dataset_choice)
-    elif dataset_choice == "FacebookPagePage":
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_facebook_pagepage_dataset(dataset_choice)
-    elif dataset_choice == "Actor":
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_actor_dataset(dataset_choice)
-    elif dataset_choice == "LastFMAsia":
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_lastfmasia_dataset(dataset_choice)
-    elif dataset_choice == "DeezerEurope":
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_deezereurope_dataset(dataset_choice)
-    elif dataset_choice == "Amazon Computers":
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_amazon_dataset(dataset_choice.split(" ")[0],
-                                                                                           dataset_choice.split(" ")[1])
-    elif dataset_choice == "Amazon Photo":
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_amazon_dataset(dataset_choice.split(" ")[0],
-                                                                                           dataset_choice.split(" ")[1])
-    elif dataset_choice == "Reddit":
-        adjacency, _, features, labels, train_mask, val_mask, test_mask = load_reddit_data()
-    elif dataset_choice == "Yelp":
-        adjacency, features, labels, train_mask, val_mask, test_mask = load_yelp_data()
-    elif dataset_choice == "Arxiv":
-        adjacency, _, features, labels, train_mask, val_mask, test_mask = load_ogbn_dataset(dataset_choice.lower())
-    elif dataset_choice == "Products":
-        adjacency, _, features, labels, train_mask, val_mask, test_mask = load_ogbn_dataset(dataset_choice.lower())
-    elif dataset_choice == "Mag":
-        adjacency, _, features, labels, train_mask, val_mask, test_mask = load_ogbn_dataset(dataset_choice.lower())
-    else:
-        print("Invalid dataset")
-        exit()
-
+    adjacency, features, labels, train_mask, val_mask, test_mask, _  = get_training_data(dataset_choice)
 
     n_class = np.unique(labels).shape[0]
     if (type(features) is not np.ndarray and dataset_choice != "Reddit" and dataset_choice != "Mag"
@@ -141,34 +110,37 @@ def run_classificaton(cuda_num, dataset_choice, config, logger=None):
 
     return accuracy, efficiency, dataset_choice, total_seconds
 
-def run_clustering(dataset_choice, config):
+
+def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
+
+    device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
+    data = load_reddit_data().to(device)  # Load Reddit dataset and move it to the device
+
+    # NeighborLoader requires a PyG Data object
+    loader = NeighborLoader(data, num_neighbors=[10, 10], batch_size=128, input_nodes=data.train_mask)
+
+    num_features = data.x.shape[1]  # Fix feature size extraction
+    num_classes = int(data.y.max().item()) + 1  # Fix class count extraction
+
+    model = SGC(num_features, num_classes).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+    train(model, loader, optimizer, epochs=100, device=device)
+    accuracy = test(model, loader, device=device)
+    print(f"Test Accuracy: {accuracy:.4f}")
+
+    print("hello there")
+
+
+
+
+
+def run_clustering_with_SGNN(dataset_choice, config):
     dataset_name = None
     start_time = datetime.now()
-    if dataset_choice == "Cora":
-        features, _, adjacency, labels = load_cora()
-    elif dataset_choice == "Citeseer":
-        features, adjacency, labels = load_citeseer_from_mat()
-    elif dataset_choice == "PubMed":
-        features, adjacency, labels = load_pubmed()
-    elif dataset_choice == "Flickr":
-        adjacency, features, labels, _, _, _ = load_flickr_data(dataset_name)
-    elif dataset_choice == "FacebookPagePage":
-        adjacency, features, labels, _, _, _ = load_facebook_pagepage_dataset(dataset_name)
-    elif dataset_choice == "Actor":
-        adjacency, features, labels, _, _, _ = load_actor_dataset(dataset_name)
-    elif dataset_choice == "LastFMAsia":
-        adjacency, features, labels, _, _, _ = load_lastfmasia_dataset(dataset_name)
-    elif dataset_choice == "DeezerEurope":
-        adjacency, features, labels, _, _, _ = load_deezereurope_dataset(dataset_name)
-    elif dataset_choice == "Amazon Computers":
-        adjacency, features, labels, _, _, _ = load_amazon_dataset(dataset_choice.split(" ")[0],
-                                                                   dataset_choice.split(" ")[1])
-    elif dataset_choice == "Amazon Photo":
-        adjacency, features, labels, _, _, _ = load_amazon_dataset(dataset_choice.split(" ")[0],
-                                                                   dataset_choice.split(" ")[1])
-    else:
-        print("Invalid dataset")
-        exit()
+
+    adjacency, features, labels, train_mask, val_mask, test_mask  = get_training_data(dataset_choice)
+
 
     mask_rate = config["mask_rate"]
     overlook_rates = config["overlook_rates"]
