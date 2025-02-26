@@ -2,16 +2,20 @@ import torch
 from torch_geometric.nn import SGConv
 import torch.nn.functional as F
 
+
 class SGC(torch.nn.Module):
     def __init__(self, num_features, num_classes):
         super(SGC, self).__init__()
         self.conv1 = SGConv(num_features, 128)
-        self.conv3 = SGConv(128, num_classes)
+        self.conv2 = SGConv(128, 64)
+        self.fc = torch.nn.Linear(64, num_classes)
 
     def forward(self, x, edge_index):
         x = self.conv1(x, edge_index)
         x = F.relu(x)
-        x = self.conv3(x, edge_index)
+        x = self.conv2(x, edge_index)
+        x = F.relu(x)
+        x = self.fc(x)  # Linear layer for classification
         return x
 
 
