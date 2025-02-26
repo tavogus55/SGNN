@@ -115,7 +115,7 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
 
     start_time = datetime.now()
 
-    epochs = 2
+    epochs = 100
 
     device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
     data = load_reddit_data().to(device)  # Load Reddit dataset and move it to the device
