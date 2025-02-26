@@ -28,9 +28,11 @@ def run_experiment(cuda_num, exp_times, config, dataset_decision, model_decision
             nmi_list.append(nmi)
         elif task_type == 'Classification':
             if model_decision == 'SGNN':
-                accuracy, efficiency, dataset_name, time_taken = run_classificaton_with_SGNN(cuda_num, dataset_decision, config, logger=logger)
+                accuracy, efficiency, dataset_name, time_taken = run_classificaton_with_SGNN(cuda_num, dataset_decision,
+                                                                                             config, logger=logger)
             elif model_decision == 'SGC':
-                run_classification_with_SGC(cuda_num, dataset_decision, config, logger=logger)
+                accuracy, efficiency, dataset_name, time_taken = run_classification_with_SGC(cuda_num, dataset_decision,
+                                                                                             config, logger=logger)
             else:
                 exit()
             accuracy_list.append(accuracy)

@@ -32,6 +32,7 @@ conda create --name SGNN-geometric-new python=3.11
 conda activate SGNN-geometric-new
 conda install pytorch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 pytorch-cuda=12.1 -c pytorch -c nvidia
 pip install torch_geometric
+pip install torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-2.2.0+cu121.htmlgeometric-new
 pip install tensorflow
 pip install networkx
 pip install scikit-learn
@@ -63,7 +64,7 @@ pip install protobuf==3.20.3
 
 Example:
 ```
-python main.py -cuda_num=0 --data=Reddit --task=Classification --exp=1
+python main.py --cuda_num=0 --data="Reddit" --model=SGNN --task="Classification" --exp=1 --log_path="local_1"
 ```
 # SGNN Script Arguments
 

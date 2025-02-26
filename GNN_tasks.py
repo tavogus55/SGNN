@@ -113,6 +113,10 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
 
 def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
 
+    start_time = datetime.now()
+
+    epochs = 2
+
     device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
     data = load_reddit_data().to(device)  # Load Reddit dataset and move it to the device
 
@@ -125,14 +129,30 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
     model = SGC(num_features, num_classes).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    train(model, loader, optimizer, epochs=100, device=device)
+    train(model, loader, optimizer, epochs=epochs, device=device, logger=logger)
     accuracy = test(model, loader, device=device)
-    print(f"Test Accuracy: {accuracy:.4f}")
+    logger.info(f"Test Accuracy: {accuracy:.4f}")
 
-    print("hello there")
+    finish_time = datetime.now()
+
+    time_difference = finish_time - start_time
+
+    # Extract hours, minutes, and seconds
+    total_seconds = int(time_difference.total_seconds())
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    logger.info(start_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
+    logger.info(finish_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
+    logger.info(f"Training lasted {hours} hours, {minutes} minutes, {seconds} seconds")
 
 
+    total_iterations = epochs
+    logger.info(f"Total iterations: {total_iterations}")
+    efficiency = total_seconds / total_iterations
+    logger.info(f"Official efficiency: {efficiency}")
 
+    return accuracy, efficiency, dataset_choice, total_seconds
 
 
 def run_clustering_with_SGNN(dataset_choice, config):

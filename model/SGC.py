@@ -15,7 +15,7 @@ class SGC(torch.nn.Module):
         return x
 
 
-def train(model, loader, optimizer, epochs, device):
+def train(model, loader, optimizer, epochs, device, logger=None):
     model.train()
     for epoch in range(epochs):
         total_loss = 0
@@ -27,7 +27,7 @@ def train(model, loader, optimizer, epochs, device):
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-        print(f"Epoch {epoch + 1}: Loss: {total_loss:.4f}")
+        logger.debug(f"Epoch {epoch + 1}: Loss: {total_loss:.4f}")
 
 
 def test(model, loader, device):
