@@ -16,7 +16,14 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
 
     start_time = datetime.now()
 
-    adjacency, features, labels, train_mask, val_mask, test_mask, _  = get_training_data(dataset_choice)
+    data = load_reddit_data()
+
+    labels = data.y
+    features = data.x
+    train_mask = data.train_mask
+    val_mask = data.val_mask
+    test_mask = data.test_mask
+    adjacency = data.adjacency
 
     n_class = np.unique(labels).shape[0]
     if (type(features) is not np.ndarray and dataset_choice != "Reddit" and dataset_choice != "Mag"
