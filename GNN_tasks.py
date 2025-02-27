@@ -11,12 +11,11 @@ warnings.filterwarnings('ignore')
 utils.set_seed(0)
 
 
-
 def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
 
     start_time = datetime.now()
 
-    data = load_reddit_data()
+    data = get_training_data(dataset_choice)
 
     labels = data.y
     features = data.x
@@ -123,19 +122,23 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
     epochs = 100
 
     device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
-    data = load_reddit_data().to(device)
+    pygdata, custom_data = get_training_data(dataset_choice)
+    data = pygdata.to(device)
+    custom_data = custom_data.to(device)
 
-    loader = NeighborLoader(data, num_neighbors=[15, 10], batch_size=512, input_nodes=data.train_mask)
+    loader = NeighborLoader(data[0], num_neighbors=[15, 10], batch_size=512, input_nodes=custom_data.train_mask)
 
-    num_features = data.x.shape[1]
-    num_classes = int(data.y.max().item()) + 1
+    num_features = data.num_node_features
+    num_classes = data.num_classes
 
-    model = SGC(num_features, num_classes).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    data = data[0]
 
-    train(model, loader, optimizer, epochs=epochs, device=device, logger=logger)
+    model = SGC(num_features, 128, num_classes).to(device)
 
-    accuracy = test(model, data, device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=0.0005)
+
+    train(model, data, optimizer, epochs, custom_data.train_mask, logger=logger)
+    accuracy = test(model, data, custom_data.test_mask)
 
     logger.info(f"Test Accuracy: {accuracy:.4f}")
 

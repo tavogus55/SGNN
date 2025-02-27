@@ -1,40 +1,44 @@
 import torch
 from torch_geometric.nn import SGConv
 import torch.nn.functional as F
+from torch.nn import Linear
 
 
 class SGC(torch.nn.Module):
-    def __init__(self, num_features, num_classes):
+    def __init__(self, num_features, hidden_size, num_classes):
+        """
+        Two-layer SGC model:
+        - First layer: size = hidden_size (128 as per paper).
+        - Second layer: size = num_classes (for classification tasks).
+        """
         super(SGC, self).__init__()
-        self.conv = SGConv(num_features, num_classes, K=2, cached=False)  # Single-layer SGC
+        self.conv1 = SGConv(num_features, hidden_size)
+        self.conv2 = SGConv(hidden_size, num_classes)
 
-    def forward(self, x, edge_index):
-        return self.conv(x, edge_index)
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
+        x = self.conv1(x, edge_index)
+        x = self.conv2(x, edge_index)
+        return x
 
 
-def train(model, loader, optimizer, epochs, device, logger=None):
+def train(model, data, optimizer, epochs, train_mask, logger=None):
     model.train()
-    for epoch in range(epochs):
-        total_loss = 0
-        for batch in loader:
-            batch = batch.to(device)
-            optimizer.zero_grad()
-            out = model(batch.x, batch.edge_index)
-            loss = F.cross_entropy(out[batch.train_mask], batch.y[batch.train_mask])
-            loss.backward()
-            optimizer.step()
-            total_loss += loss.item()
-
-        if logger:
-            logger.debug(f"Epoch {epoch + 1}: Loss: {total_loss:.4f}")
-        else:
-            print(f"Epoch {epoch + 1}: Loss: {total_loss:.4f}")
+    for epoch in range(epochs):  # Number of epochs
+        optimizer.zero_grad()
+        out = model(data)
+        # Compute loss using only training nodes
+        loss = F.cross_entropy(out[train_mask], data.y[train_mask])
+        loss.backward()
+        optimizer.step()
+        if epoch % 10 == 0:
+            logger.debug(f"Epoch {epoch}: Loss: {loss.item():.4f}")
 
 
-@torch.no_grad()
-def test(model, data, device):
+def test(model, data, test_mask):
     model.eval()
-    out = model(data.x, data.edge_index).argmax(dim=1)
-    correct = (out[data.test_mask] == data.y[data.test_mask]).sum().item()
-    total = data.test_mask.sum().item()
-    return correct / total
+    out = model(data)
+    pred = out.argmax(dim=1)  # Predicted clasgcs for each node
+    correct = pred[test_mask].eq(data.y[test_mask]).sum().item()
+    acc = correct / test_mask.sum().item()
+    return acc
