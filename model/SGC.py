@@ -6,17 +6,10 @@ import torch.nn.functional as F
 class SGC(torch.nn.Module):
     def __init__(self, num_features, num_classes):
         super(SGC, self).__init__()
-        self.conv1 = SGConv(num_features, 128)
-        self.conv2 = SGConv(128, 64)
-        self.fc = torch.nn.Linear(64, num_classes)
+        self.conv = SGConv(num_features, num_classes, K=2, cached=False)  # Single-layer SGC
 
     def forward(self, x, edge_index):
-        x = self.conv1(x, edge_index)
-        x = F.relu(x)
-        x = self.conv2(x, edge_index)
-        x = F.relu(x)
-        x = self.fc(x)  # Linear layer for classification
-        return x
+        return self.conv(x, edge_index)
 
 
 def train(model, loader, optimizer, epochs, device, logger=None):
@@ -24,24 +17,24 @@ def train(model, loader, optimizer, epochs, device, logger=None):
     for epoch in range(epochs):
         total_loss = 0
         for batch in loader:
-            batch = batch.to(device)  # Move batch to device
+            batch = batch.to(device)
             optimizer.zero_grad()
             out = model(batch.x, batch.edge_index)
             loss = F.cross_entropy(out[batch.train_mask], batch.y[batch.train_mask])
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-        logger.debug(f"Epoch {epoch + 1}: Loss: {total_loss:.4f}")
+
+        if logger:
+            logger.debug(f"Epoch {epoch + 1}: Loss: {total_loss:.4f}")
+        else:
+            print(f"Epoch {epoch + 1}: Loss: {total_loss:.4f}")
 
 
-def test(model, loader, device):
+@torch.no_grad()
+def test(model, data, device):
     model.eval()
-    correct = 0
-    total = 0
-    for batch in loader:
-        batch = batch.to(device)  # Move batch to device
-        out = model(batch.x, batch.edge_index)
-        pred = out.argmax(dim=1)
-        correct += pred[batch.test_mask].eq(batch.y[batch.test_mask]).sum().item()
-        total += batch.test_mask.sum().item()
+    out = model(data.x, data.edge_index).argmax(dim=1)
+    correct = (out[data.test_mask] == data.y[data.test_mask]).sum().item()
+    total = data.test_mask.sum().item()
     return correct / total

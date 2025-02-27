@@ -119,43 +119,39 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
 
 
 def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
-
     start_time = datetime.now()
-
     epochs = 100
 
     device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
-    data = load_reddit_data().to(device)  # Load Reddit dataset and move it to the device
+    data = load_reddit_data().to(device)
 
-    # NeighborLoader requires a PyG Data object
-    loader = NeighborLoader(data, num_neighbors=[10, 10], batch_size=128, input_nodes=data.train_mask)
+    loader = NeighborLoader(data, num_neighbors=[15, 10], batch_size=512, input_nodes=data.train_mask)
 
-    num_features = data.x.shape[1]  # Fix feature size extraction
-    num_classes = int(data.y.max().item()) + 1  # Fix class count extraction
+    num_features = data.x.shape[1]
+    num_classes = int(data.y.max().item()) + 1
 
     model = SGC(num_features, num_classes).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     train(model, loader, optimizer, epochs=epochs, device=device, logger=logger)
-    accuracy = test(model, loader, device=device)
+
+    accuracy = test(model, data, device)
+
     logger.info(f"Test Accuracy: {accuracy:.4f}")
 
     finish_time = datetime.now()
-
     time_difference = finish_time - start_time
 
-    # Extract hours, minutes, and seconds
+    logger.info(start_time.strftime("Process started at: %Y-%m-%d %H:%M:%S"))
+    logger.info(finish_time.strftime("Process finished at: %Y-%m-%d %H:%M:%S"))
+
     total_seconds = int(time_difference.total_seconds())
     hours, remainder = divmod(total_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
 
-    logger.info(start_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
-    logger.info(finish_time.strftime("Process started at: " + "%Y-%m-%d %H:%M:%S"))
     logger.info(f"Training lasted {hours} hours, {minutes} minutes, {seconds} seconds")
 
-
     total_iterations = epochs
-    logger.info(f"Total iterations: {total_iterations}")
     efficiency = total_seconds / total_iterations
     logger.info(f"Official efficiency: {efficiency}")
 
