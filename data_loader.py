@@ -24,21 +24,21 @@ def get_training_data(dataset_choice):
     if dataset_choice == "Cora" or dataset_choice == "Citeseer" or dataset_choice == "PubMed":
         data = load_data(dataset_choice)
     elif dataset_choice == "Flickr":
-        data = load_flickr_data(dataset_choice)
+        data = load_flickr_data()
     elif dataset_choice == "FacebookPagePage":
-        data = load_facebook_pagepage_dataset(dataset_choice)
+        data = load_facebook_pagepage_dataset()
     elif dataset_choice == "Actor":
-        data = load_actor_dataset(dataset_choice)
+        data = load_actor_dataset()
     elif dataset_choice == "LastFMAsia":
-        pyg_data, custom_data = load_lastfmasia_dataset(dataset_choice)
+        data = load_lastfmasia_dataset()
     elif dataset_choice == "DeezerEurope":
-        data = load_deezereurope_dataset(dataset_choice)
+        data = load_deezereurope_dataset()
     elif dataset_choice == "Amazon Computers":
-        data = load_amazon_dataset(dataset_choice.split(" ")[0], dataset_choice.split(" ")[1])
+        data = load_amazon_dataset(dataset_choice.split(" ")[1])
     elif dataset_choice == "Amazon Photo":
-        data = load_amazon_dataset(dataset_choice.split(" ")[0], dataset_choice.split(" ")[1])
+        data = load_amazon_dataset(dataset_choice.split(" ")[1])
     elif dataset_choice == "Reddit":
-        pyg_data, custom_data = load_reddit_data(dataset_choice)
+        data = load_reddit_data(dataset_choice)
     elif dataset_choice == "Yelp":
         data = load_yelp_data()
     elif dataset_choice == "Arxiv":
@@ -51,7 +51,7 @@ def get_training_data(dataset_choice):
         print("Invalid dataset")
         exit()
 
-    return pyg_data, custom_data
+    return data
 
 
 def load_ogbn_dataset(dataset_n):
@@ -91,7 +91,7 @@ def load_ogbn_dataset(dataset_n):
     full_adj = to_scipy_sparse_matrix(edge_index, num_nodes=num_nodes)
 
     data = Data(x=features, y=labels, train_mask=train_index, val_mask=val_index,
-                test_mask=test_index, adjacency=full_adj)
+                test_mask=test_index, adjacency=full_adj, pyg_data=dataset)
 
     return data
 
@@ -108,8 +108,11 @@ def load_flickr_data(dataset):
         val_mask: Validation mask (numpy.ndarray).
         test_mask: Test mask (numpy.ndarray).
     """
+
+    pyg_data = Flickr(root=f"data/Flickr")
+
     # Paths to the raw Flickr data
-    raw_dir = f"./data/{dataset}/raw/"
+    raw_dir = f"./data/Flickr/raw/"
 
     # Load data
     adj_full = sp.load_npz(raw_dir + "adj_full.npz")
@@ -136,18 +139,18 @@ def load_flickr_data(dataset):
     adj = nx.adjacency_matrix(nx.from_scipy_sparse_array(adj_full))
 
     data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask,
-                test_mask=test_mask, adjacency=adj)
+                test_mask=test_mask, adjacency=adj, pyg_data=pyg_data)
 
     return data
 
 
 def load_yelp_data():
 
-    dataset = Yelp(root='./data/Yelp')
-    data = dataset[0]
+    pyg_data = Yelp(root='./data/Yelp')
+    yelp_data = pyg_data[0]
 
     # Convert multi-label to single-label (pick the dominant label)
-    labels = data.y.argmax(dim=1)
+    labels = yelp_data.y.argmax(dim=1)
 
     # Remap labels to ensure they are sequential from 0 to num_classes-1
     unique_classes = torch.unique(labels)
@@ -155,29 +158,32 @@ def load_yelp_data():
     labels = torch.tensor([mapping[label.item()] for label in labels], dtype=torch.long)
 
     # Convert adjacency to sparse matrix
-    adjacency = to_scipy_sparse_matrix(data.edge_index, num_nodes=data.num_nodes)
+    adjacency = to_scipy_sparse_matrix(yelp_data.edge_index, num_nodes=yelp_data.num_nodes)
 
     # Extract features
-    features = data.x
+    features = yelp_data.x
 
     # Extract masks
-    train_mask, val_mask, test_mask = data.train_mask, data.val_mask, data.test_mask
+    train_mask, val_mask, test_mask = yelp_data.train_mask, yelp_data.val_mask, yelp_data.test_mask
 
-    data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask,
-                test_mask=test_mask, adjacency=adjacency)
+    datax = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask,
+                test_mask=test_mask, adjacency=adjacency, pyg_data=pyg_data)
 
-    return data
+    return datax
 
 
-def load_facebook_pagepage_dataset(dataset):
+def load_facebook_pagepage_dataset():
     """
     Loads the FacebookPagePage dataset from the specified path.
 
     :param dataset_path: Path to the directory containing the raw dataset (e.g., "FacebookPagePage/raw").
     :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
     """
+
+    pyg_data = FacebookPagePage(root=f"data/FacebookPagePage")
+
     # Load the raw data
-    data = np.load(f"data/{dataset}/raw/facebook.npz", allow_pickle=True)
+    data = np.load(f"data/FacebookPagePage/raw/facebook.npz", allow_pickle=True)
 
     # Extract edges, features, and target (labels)
     edges = data["edges"]  # Edge list
@@ -203,61 +209,22 @@ def load_facebook_pagepage_dataset(dataset):
     test_mask[int(0.85 * num_nodes):] = True
 
     data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask,
-                test_mask=test_mask, adjacency=adjacency)
+                test_mask=test_mask, adjacency=adjacency, pyg_data=pyg_data)
 
     return data
 
 
-def load_lastfmasia_dataset(dataset):
+def load_lastfmasia_dataset():
     """
     Loads the LastFMAsia dataset from the specified path.
 
     :param dataset_path: Path to the directory containing the raw dataset (e.g., "LastFMAsia/raw").
     :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
     """
-    pyg_data = LastFMAsia(root=f"data/{dataset}")
+    pyg_data = LastFMAsia(root=f"data/LastFMAsia")
 
     # Load the raw data
-    data = np.load(f"data/{dataset}/raw/lastfm_asia.npz", allow_pickle=True)
-
-    # Extract edges, features, and target (labels)
-    edges = data["edges"]  # Edge list
-    features = data["features"]  # Node features
-    labels = data["target"]  # Node labels
-
-    # Create adjacency matrix from edge list
-    num_nodes = features.shape[0]
-    adjacency = sp.coo_matrix(
-        (np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
-        shape=(num_nodes, num_nodes),
-        dtype=np.float32
-    ).tocsc()
-
-    # Assuming no train/val/test masks in this dataset, split manually (if needed)
-    train_mask = np.zeros(num_nodes, dtype=bool)
-    val_mask = np.zeros(num_nodes, dtype=bool)
-    test_mask = np.zeros(num_nodes, dtype=bool)
-
-    # Example: First 70% for training, next 15% for validation, last 15% for testing
-    train_mask[: int(0.7 * num_nodes)] = True
-    val_mask[int(0.7 * num_nodes): int(0.85 * num_nodes)] = True
-    test_mask[int(0.85 * num_nodes):] = True
-
-    custom_data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask,
-                test_mask=test_mask, adjacency=adjacency)
-
-    return pyg_data, custom_data
-
-
-def load_deezereurope_dataset(dataset):
-    """
-    Loads the DeezerEurope dataset from the specified path.
-
-    :param dataset_path: Path to the directory containing the raw dataset (e.g., "DeezerEurope/raw").
-    :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
-    """
-    # Load the raw data
-    data = np.load(f"data/{dataset}/raw/deezer_europe.npz", allow_pickle=True)
+    data = np.load(f"data/LastFMAsia/raw/lastfm_asia.npz", allow_pickle=True)
 
     # Extract edges, features, and target (labels)
     edges = data["edges"]  # Edge list
@@ -283,20 +250,66 @@ def load_deezereurope_dataset(dataset):
     test_mask[int(0.85 * num_nodes):] = True
 
     data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask,
-                test_mask=test_mask, adjacency=adjacency)
+                test_mask=test_mask, adjacency=adjacency, pyg_data=pyg_data)
 
     return data
 
-def load_actor_dataset(dataset_path):
+
+def load_deezereurope_dataset():
+    """
+    Loads the DeezerEurope dataset from the specified path.
+
+    :param dataset_path: Path to the directory containing the raw dataset (e.g., "DeezerEurope/raw").
+    :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
+    """
+
+    pyg_data = LastFMAsia(root=f"data/DeezerEurope")
+
+    # Load the raw data
+    data = np.load(f"data/DeezerEurope/raw/deezer_europe.npz", allow_pickle=True)
+
+    # Extract edges, features, and target (labels)
+    edges = data["edges"]  # Edge list
+    features = data["features"]  # Node features
+    labels = data["target"]  # Node labels
+
+    # Create adjacency matrix from edge list
+    num_nodes = features.shape[0]
+    adjacency = sp.coo_matrix(
+        (np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
+        shape=(num_nodes, num_nodes),
+        dtype=np.float32
+    ).tocsc()
+
+    # Assuming no train/val/test masks in this dataset, split manually (if needed)
+    train_mask = np.zeros(num_nodes, dtype=bool)
+    val_mask = np.zeros(num_nodes, dtype=bool)
+    test_mask = np.zeros(num_nodes, dtype=bool)
+
+    # Example: First 70% for training, next 15% for validation, last 15% for testing
+    train_mask[: int(0.7 * num_nodes)] = True
+    val_mask[int(0.7 * num_nodes): int(0.85 * num_nodes)] = True
+    test_mask[int(0.85 * num_nodes):] = True
+
+    data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask,
+                test_mask=test_mask, adjacency=adjacency, pyg_data=pyg_data)
+
+    return data
+
+
+def load_actor_dataset():
     """
     Loads the Actor dataset from the specified path.
 
     :param dataset_path: Path to the directory containing the raw dataset (e.g., "Actor/raw").
     :return: adjacency (sparse matrix), features (numpy array), labels (numpy array)
     """
+
+    pyg_data = Actor(root=f"data/Actor")
+
     # File paths
-    edges_file = f"data/{dataset_path}/raw/out1_graph_edges.txt"
-    features_labels_file = f"data/{dataset_path}/raw/out1_node_feature_label.txt"
+    edges_file = f"data/Actor/raw/out1_graph_edges.txt"
+    features_labels_file = f"data/Actor/raw/out1_node_feature_label.txt"
 
     # Load edges (tab-separated values)
     edges = np.loadtxt(edges_file, dtype=int, delimiter="\t", skiprows=1)
@@ -346,11 +359,11 @@ def load_actor_dataset(dataset_path):
     test_mask[int(0.85 * num_nodes):] = True
 
     data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask,
-                test_mask=test_mask, adjacency=adjacency)
+                test_mask=test_mask, adjacency=adjacency, pyg_data=pyg_data)
 
     return data
 
-def load_amazon_dataset(dataset_name, dataset_type):
+def load_amazon_dataset(dataset_type):
     """
     Loads the Amazon dataset from the specified path.
 
@@ -358,8 +371,11 @@ def load_amazon_dataset(dataset_name, dataset_type):
     :param dataset_type: Type of dataset, e.g., "Computers" or "Photos".
     :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
     """
+
+    pyg_data = Amazon(root=f"data/Amazon", name=dataset_type)
+
     # Load the raw data
-    data = np.load(f"data/{dataset_name}/{dataset_type}/raw/amazon_electronics_{dataset_type.lower()}.npz", allow_pickle=True)
+    data = np.load(f"data/Amazon/{dataset_type}/raw/amazon_electronics_{dataset_type.lower()}.npz", allow_pickle=True)
 
     # Extract adjacency matrix components
     adj_data = data["adj_data"]
@@ -392,10 +408,9 @@ def load_amazon_dataset(dataset_name, dataset_type):
     features = np.array(features, dtype=np.float32)
 
     data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask,
-                test_mask=test_mask, adjacency=adjacency)
+                test_mask=test_mask, adjacency=adjacency, pyg_data=pyg_data)
 
     return data
-
 def load_cora():
     path = 'data/cora/'
     data_name = 'cora'

@@ -307,13 +307,12 @@ def load_reddit_data(normalization="AugNormAdj", cuda=True):
     val_mask = torch.BoolTensor(np.isin(np.arange(len(labels)), val_index))
     test_mask = torch.BoolTensor(np.isin(np.arange(len(labels)), test_index))
 
-    # Create PyG Data object
-    custom_data = Data(x=features, edge_index=edge_index, y=labels, train_mask=train_mask, val_mask=val_mask,
-                test_mask=test_mask, adjacency=adj)
-
     pyg_data = Reddit(root='./data/Reddit2')
 
-    return pyg_data, custom_data  # Returning a single Data object
+    data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask,
+                test_mask=test_mask, adjacency=adj, pyg_data=pyg_data)
+
+    return data
 
 
 def aug_normalized_adjacency(adj):

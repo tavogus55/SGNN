@@ -68,13 +68,15 @@ python main.py --cuda_num=0 --data="Reddit" --model=SGNN --task="Classification"
 ```
 # SGNN Script Arguments
 
-| Argument      | Type  | Required | Description |
-|--------------|------|----------|-------------|
-| `--cuda_num` | str  | Yes      | Specifies the GPU device to use for computation. |
-| `--data`     | str  | Yes      | Name of the dataset to be used in the experiment. |
-| `--task`     | str  | Yes      | Defines the type of task: `classification` or `clustering`. |
+| Argument     | Type  | Required | Description                                                       |
+|--------------|------|----------|-------------------------------------------------------------------|
+| `--cuda_num` | str  | Yes      | Specifies the GPU device to use for computation.                  |
+| `--data`     | str  | Yes      | Name of the dataset to be used in the experiment.                 |
+| `--task`     | str  | Yes      | Defines the type of task: `classification` or `clustering`.       |
+| `--model`    | str  | Yes      | Defines the type of model to use: `SGNN`, `SGC`, and `GCN`.       |
+| `--log_path` | str  | Yes      | Specifies where to store log data.                                |
 | `--exp`      | int  | Yes      | Number of times to run the experiment for statistical validation. |
-| `--tuning`   | int  | No       | Number of iterations for hyperparameter tuning (if applicable). |
+| `--tuning`   | int  | No       | Number of iterations for hyperparameter tuning (if applicable).   |
 
 
 

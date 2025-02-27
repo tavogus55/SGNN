@@ -122,23 +122,26 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
     epochs = 100
 
     device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
-    pygdata, custom_data = get_training_data(dataset_choice)
-    data = pygdata.to(device)
-    custom_data = custom_data.to(device)
+    training_data = get_training_data(dataset_choice)
+    pyg_data = training_data.pyg_data.to(device)
+    training_data = training_data.to(device)
 
-    loader = NeighborLoader(data[0], num_neighbors=[15, 10], batch_size=512, input_nodes=custom_data.train_mask)
+    if dataset_choice == "Reddit":
+        loader = NeighborLoader(pyg_data[0], num_neighbors=[15, 10], batch_size=512, input_nodes=training_data.train_mask)
+    else:
+        loader = None
 
-    num_features = data.num_node_features
-    num_classes = data.num_classes
+    num_features = pyg_data.num_node_features
+    num_classes = pyg_data.num_classes
 
-    data = data[0]
+    pyg_data = pyg_data[0]
 
     model = SGC(num_features, 128, num_classes).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=0.0005)
 
-    train(model, data, optimizer, epochs, custom_data.train_mask, logger=logger)
-    accuracy = test(model, data, custom_data.test_mask)
+    train(model, pyg_data, optimizer, epochs, training_data.train_mask, logger=logger, loader=loader)
+    accuracy = test(model, pyg_data, training_data.test_mask, loader=loader)
 
     logger.info(f"Test Accuracy: {accuracy:.4f}")
 
