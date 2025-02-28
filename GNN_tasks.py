@@ -126,8 +126,10 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
     pyg_data = training_data.pyg_data.to(device)
     training_data = training_data.to(device)
 
-    if dataset_choice == "Reddit":
-        loader = NeighborLoader(pyg_data[0], num_neighbors=[15, 10], batch_size=512, input_nodes=training_data.train_mask)
+    if (dataset_choice == "Reddit" or dataset_choice == "Yelp" or dataset_choice == "Arxiv"
+            or dataset_choice == "Products" or dataset_choice == "Mag"):
+        loader = NeighborLoader(pyg_data[0], num_neighbors=[15, 10], batch_size=512,
+                                input_nodes=training_data.train_mask)
     else:
         loader = None
 
