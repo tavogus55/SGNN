@@ -28,10 +28,10 @@ def run_experiment(cuda_num, exp_times, config, dataset_decision, model_decision
             nmi_list.append(nmi)
         elif task_type == 'Classification':
             if model_decision == 'SGNN':
-                accuracy, efficiency, dataset_name, time_taken = run_classificaton_with_SGNN(cuda_num, dataset_decision,
+                accuracy, efficiency, time_taken = run_classificaton_with_SGNN(cuda_num, dataset_decision,
                                                                                              config, logger=logger)
             elif model_decision == 'SGC':
-                accuracy, efficiency, dataset_name, time_taken = run_classification_with_SGC(cuda_num, dataset_decision,
+                accuracy, efficiency, time_taken = run_classification_with_SGC(cuda_num, dataset_decision,
                                                                                              config, logger=logger)
             else:
                 exit()
@@ -49,7 +49,7 @@ def run_experiment(cuda_num, exp_times, config, dataset_decision, model_decision
     average_time_taken = total_time_taken / exp_times
     average_nmi = total_nmi / exp_times
     logger.info(f"\nEXPERIMENT RESULTS")
-    logger.info(f'Dataset used: {dataset_name}')
+    logger.info(f'Dataset used: {dataset_decision}')
     logger.info(f'Model used: {model_decision}')
     logger.info(f'Task type: {task_type}')
     logger.info(f'Experiment count: {exp_times}')
@@ -70,7 +70,7 @@ def main(cuda_num, dataset_decision, model_decision, task_type, exp_times, isTun
     if isTuning is None:
         with open('./config.json', 'r') as file:
             settings = json.load(file)
-            config = settings[task_type][dataset_decision]
+            config = settings[model_decision][task_type][dataset_decision]
         run_experiment(cuda_num, exp_times, config, dataset_decision, model_decision, logger=logger)
     else:
         tuning_accuracy_list = []

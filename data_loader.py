@@ -5,11 +5,10 @@ import pickle as pkl
 import networkx as nx
 import sys
 from ogb.nodeproppred import PygNodePropPredDataset
-from torch_geometric.utils import to_scipy_sparse_matrix
 import numpy as np
 import json
 import torch
-from reddit_utils import load_reddit_data
+from torch_geometric.utils import to_scipy_sparse_matrix, from_scipy_sparse_matrix
 from torch_geometric.data import Data
 from torch_geometric.datasets import (Planetoid, Reddit, Flickr, FacebookPagePage, Actor, LastFMAsia, DeezerEurope,
                                       Amazon, Yelp)
@@ -38,7 +37,7 @@ def get_training_data(dataset_choice):
     elif dataset_choice == "Amazon Photo":
         data = load_amazon_dataset(dataset_choice.split(" ")[1])
     elif dataset_choice == "Reddit":
-        data = load_reddit_data(dataset_choice)
+        data = load_reddit_data()
     elif dataset_choice == "Yelp":
         data = load_yelp_data()
     elif dataset_choice == "Arxiv":
@@ -53,6 +52,59 @@ def get_training_data(dataset_choice):
 
     return data
 
+def loadRedditFromNPZ(dataset_dir: str):
+    # Load NPZ files for NPZ-based Reddit data
+    adj = sp.load_npz(dataset_dir + "reddit_adj.npz")
+    data = np.load(dataset_dir + "reddit.npz")
+    return (adj, data['feats'], data['y_train'], data['y_val'],
+            data['y_test'], data['train_index'], data['val_index'], data['test_index'])
+
+
+def load_reddit_data(dataset_dir: str = "data/") -> Data:
+    """
+    Loads Reddit data from NPZ files and returns a Data object containing:
+      - x: normalized node features.
+      - y: node labels.
+      - train_mask, val_mask, test_mask: boolean masks.
+      - edge_index: connectivity in COO format.
+      - adjacency: raw symmetric scipy sparse matrix.
+      - pyg_data: the built-in Reddit dataset (for reference only).
+    """
+    adj, features, y_train, y_val, y_test, train_index, val_index, test_index = loadRedditFromNPZ(dataset_dir)
+
+    num_nodes = adj.shape[0]
+    labels = np.zeros(num_nodes)
+    labels[train_index] = y_train
+    labels[val_index] = y_val
+    labels[test_index] = y_test
+
+    # Convert adjacency matrix to edge_index format
+    adj = adj + adj.T  # ensure symmetry
+    edge_index, _ = from_scipy_sparse_matrix(adj)
+
+    # Normalize features
+    features = torch.FloatTensor(features)
+    features = (features - features.mean(dim=0)) / features.std(dim=0)
+
+    labels = torch.LongTensor(labels)
+    train_mask = torch.BoolTensor(np.isin(np.arange(num_nodes), train_index))
+    val_mask = torch.BoolTensor(np.isin(np.arange(num_nodes), val_index))
+    test_mask = torch.BoolTensor(np.isin(np.arange(num_nodes), test_index))
+
+    # Load built-in Reddit dataset for reference (do not use for training here)
+    pyg_data = Reddit(root='./data/Reddit2')
+
+    data = Data(
+        x=features,
+        y=labels,
+        train_mask=train_mask,
+        val_mask=val_mask,
+        test_mask=test_mask,
+        edge_index=edge_index,
+        adjacency=adj,
+        pyg_data=pyg_data
+    )
+    return data
 
 def load_ogbn_dataset(dataset_n):
 
@@ -96,7 +148,7 @@ def load_ogbn_dataset(dataset_n):
     return data
 
 
-def load_flickr_data(dataset):
+def load_flickr_data():
     """
     Loads the Flickr dataset from the given file structure.
 

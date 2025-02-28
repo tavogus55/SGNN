@@ -5,7 +5,6 @@ from data_loader import get_training_data
 import warnings
 from datetime import datetime
 from torch_geometric.loader import NeighborLoader
-from reddit_utils import load_reddit_data
 
 warnings.filterwarnings('ignore')
 utils.set_seed(0)
@@ -34,6 +33,7 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
     # ========== training setting ==========
     eta = config["eta"]
     BP_count = config["BP_count"]
+    is_large = config["isLarge"]
 
     features = features.to(device)
     layer_config = config["layers"]
@@ -41,10 +41,8 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
 
     # ========== layers setting ==========
 
-
     layer_number = 0
     layers = []
-
 
     for layer in layer_config:
 
@@ -54,8 +52,7 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
         chosen_act = get_activation(current_layer_activation)
         chosen_inner_act = get_activation(current_layer_inner_act)
 
-        if (dataset_choice == "Reddit" or dataset_choice == "Arxiv" or dataset_choice == "Products"
-                or dataset_choice == "Mag" or dataset_choice == "Yelp"):
+        if is_large:
             layer_to_add = LayerParam(layer["neurons"], inner_act=chosen_inner_act, act=chosen_act,
                                       gnn_type=LayerParam.EGCN,
                                       learning_rate=eval(layer["learning_rate"].replace("^", "**")),
@@ -114,21 +111,26 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
     efficiency = total_seconds / total_iterations
     logger.info(f"Official efficiency: {efficiency}")
 
-    return accuracy, efficiency, dataset_choice, total_seconds
+    return accuracy, efficiency, total_seconds
 
 
 def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
+
     start_time = datetime.now()
-    epochs = 100
+    is_large = config["isLarge"]
+    epochs = config["epochs"]
+    if is_large:
+        batch_size = config["batch_size"]
+    learning_rate = config["learning_rate"]
+    weight_decay = config["weight_decay"]
 
     device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
     training_data = get_training_data(dataset_choice)
     pyg_data = training_data.pyg_data.to(device)
     training_data = training_data.to(device)
 
-    if (dataset_choice == "Reddit" or dataset_choice == "Yelp" or dataset_choice == "Arxiv"
-            or dataset_choice == "Products" or dataset_choice == "Mag"):
-        loader = NeighborLoader(pyg_data[0], num_neighbors=[15, 10], batch_size=512,
+    if is_large:
+        loader = NeighborLoader(pyg_data[0], num_neighbors=[15, 10], batch_size=batch_size,
                                 input_nodes=training_data.train_mask)
     else:
         loader = None
@@ -140,7 +142,7 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
 
     model = SGC(num_features, 128, num_classes).to(device)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=0.0005)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
     train(model, pyg_data, optimizer, epochs, training_data.train_mask, logger=logger, loader=loader)
     accuracy = test(model, pyg_data, training_data.test_mask, loader=loader)
@@ -163,7 +165,7 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
     efficiency = total_seconds / total_iterations
     logger.info(f"Official efficiency: {efficiency}")
 
-    return accuracy, efficiency, dataset_choice, total_seconds
+    return accuracy, efficiency, total_seconds
 
 
 def run_clustering_with_SGNN(dataset_choice, config):

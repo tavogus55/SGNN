@@ -278,43 +278,6 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     return torch.sparse.FloatTensor(indices, values, shape)
 
 
-def loadRedditFromNPZ(dataset_dir):
-    adj = sp.load_npz(dataset_dir + "reddit_adj.npz")
-    data = np.load(dataset_dir + "reddit.npz")
-
-    return adj, data['feats'], data['y_train'], data['y_val'], data['y_test'], data['train_index'], data['val_index'], \
-           data['test_index']
-
-
-def load_reddit_data(normalization="AugNormAdj", cuda=True):
-    adj, features, y_train, y_val, y_test, train_index, val_index, test_index = loadRedditFromNPZ("data/")
-
-    labels = np.zeros(adj.shape[0])
-    labels[train_index] = y_train
-    labels[val_index] = y_val
-    labels[test_index] = y_test
-
-    # Convert adjacency matrix to edge_index format
-    adj = adj + adj.T  # Ensure symmetry
-    edge_index, _ = from_scipy_sparse_matrix(adj)
-
-    # Normalize features
-    features = torch.FloatTensor(features)
-    features = (features - features.mean(dim=0)) / features.std(dim=0)
-
-    labels = torch.LongTensor(labels)
-    train_mask = torch.BoolTensor(np.isin(np.arange(len(labels)), train_index))
-    val_mask = torch.BoolTensor(np.isin(np.arange(len(labels)), val_index))
-    test_mask = torch.BoolTensor(np.isin(np.arange(len(labels)), test_index))
-
-    pyg_data = Reddit(root='./data/Reddit2')
-
-    data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask,
-                test_mask=test_mask, adjacency=adj, pyg_data=pyg_data)
-
-    return data
-
-
 def aug_normalized_adjacency(adj):
     adj = adj + sp.eye(adj.shape[0])
     adj = sp.coo_matrix(adj)
