@@ -28,11 +28,11 @@ def run_experiment(cuda_num, exp_times, config, dataset_decision, model_decision
             nmi_list.append(nmi)
         elif task_type == 'Classification':
             if model_decision == 'SGNN':
-                accuracy, efficiency, time_taken = run_classificaton_with_SGNN(cuda_num, dataset_decision,
-                                                                                             config, logger=logger)
+                accuracy, efficiency, time_taken = run_classificaton_with_SGNN(cuda_num, dataset_decision, config,
+                                                                               logger=logger)
             elif model_decision == 'SGC':
-                accuracy, efficiency, time_taken = run_classification_with_SGC(cuda_num, dataset_decision,
-                                                                                             config, logger=logger)
+                accuracy, efficiency, time_taken = run_classification_with_SGC(cuda_num, dataset_decision, config,
+                                                                               logger=logger)
             else:
                 exit()
             accuracy_list.append(accuracy)
@@ -103,6 +103,11 @@ if __name__ == "__main__":
 
     logger = get_logger(f"{model_decision}", logPath)
 
+    logger.info(f"Dataset: {dataset_decision}")  # Check the CUDA version supported by PyTorch
+    logger.info(f"Model: {model_decision}")  # Check the CUDA version supported by PyTorch
+    logger.info(f"CUDA num: {cuda_num}")  # Check the CUDA version supported by PyTorch
+    logger.info(f"Task: {task_type}")  # Check the CUDA version supported by PyTorch
+    logger.info(f"Number of experiments: {exp_times}")  # Check the CUDA version supported by PyTorch
     logger.info(f"CUDA version: {torch.version.cuda}")  # Check the CUDA version supported by PyTorch
     logger.info(f"CUDA active: {torch.cuda.is_available()}")  # Check if CUDA is detected
     logger.info(f"Pytorch version: {torch.version.__version__}")  # Check PyTorch version

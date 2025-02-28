@@ -631,7 +631,7 @@
                 "isLarge": true
             },
             "Arxiv": {
-                "epochs": 1,
+                "epochs": 100,
                 "learning_rate": 0.01,
                 "batch_size_train": 1024,
                 "batch_size_test": 2048,
@@ -639,7 +639,7 @@
                 "isLarge": true
             },
             "Products": {
-                "epochs": 1,
+                "epochs": 100,
                 "learning_rate": 0.01,
                 "batch_size_train": 1024,
                 "batch_size_test": 2048,
@@ -647,7 +647,7 @@
                 "isLarge": true
             },
             "Mag": {
-                "epochs": 1,
+                "epochs": 100,
                 "learning_rate": 0.01,
                 "batch_size_train": 1024,
                 "batch_size_test": 2048,

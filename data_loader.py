@@ -5,7 +5,6 @@ import pickle as pkl
 import networkx as nx
 import sys
 from ogb.nodeproppred import PygNodePropPredDataset
-import numpy as np
 import json
 import torch
 from torch_geometric.utils import to_scipy_sparse_matrix, from_scipy_sparse_matrix
@@ -54,7 +53,7 @@ def get_training_data(dataset_choice):
     return data
 
 
-def loadRedditFromNPZ(dataset_dir: str):
+def load_reddit_from_npz(dataset_dir: str):
     # Load NPZ files for NPZ-based Reddit data
     adj = sp.load_npz(dataset_dir + "reddit_adj.npz")
     data = np.load(dataset_dir + "reddit.npz")
@@ -63,16 +62,8 @@ def loadRedditFromNPZ(dataset_dir: str):
 
 
 def load_reddit_data(dataset_dir: str = "data/") -> Data:
-    """
-    Loads Reddit data from NPZ files and returns a Data object containing:
-      - x: normalized node features.
-      - y: node labels.
-      - train_mask, val_mask, test_mask: boolean masks.
-      - edge_index: connectivity in COO format.
-      - adjacency: raw symmetric scipy sparse matrix.
-      - pyg_data: the built-in Reddit dataset (for reference only).
-    """
-    adj, features, y_train, y_val, y_test, train_index, val_index, test_index = loadRedditFromNPZ(dataset_dir)
+
+    adj, features, y_train, y_val, y_test, train_index, val_index, test_index = load_reddit_from_npz(dataset_dir)
 
     num_nodes = adj.shape[0]
     labels = np.zeros(num_nodes)
@@ -137,26 +128,16 @@ def load_ogbn_dataset(dataset_n):
         test_index = split_idx['test']
 
     # Convert edge_index to a SciPy sparse adjacency matrix:
-    full_adj = to_scipy_sparse_matrix(edge_index, num_nodes=num_nodes)
+    adjacency = to_scipy_sparse_matrix(edge_index, num_nodes=num_nodes)
 
-    data = Data(x=features, y=labels, train_mask=train_index, val_mask=val_index,
-                test_mask=test_index, adjacency=full_adj, pyg_data=dataset)
+    data = Data(x=features, y=labels, train_mask=train_index, val_mask=val_index, test_mask=test_index,
+                adjacency=adjacency, num_features=dataset.num_features, num_classes=dataset.num_classes,
+                edge_index=edge_index)
 
     return data
 
 
 def load_flickr_data():
-    """
-    Loads the Flickr dataset from the given file structure.
-
-    Returns:
-        adj: Sparse adjacency matrix (scipy.sparse.csr_matrix).
-        features: Feature matrix (numpy.ndarray).
-        labels: Labels (numpy.ndarray).
-        train_mask: Training mask (numpy.ndarray).
-        val_mask: Validation mask (numpy.ndarray).
-        test_mask: Test mask (numpy.ndarray).
-    """
 
     pyg_data = Flickr(root=f"data/Flickr")
 
@@ -223,19 +204,13 @@ def load_yelp_data():
     num_features = dataset.num_node_features
     num_classes = dataset.num_classes
 
-    datax = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask, test_mask=test_mask,
-                 adjacency=adjacency, num_features=num_features, num_classes=num_classes, edge_index=edge_index)
+    data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask, test_mask=test_mask, adjacency=adjacency
+                , num_features=num_features, num_classes=num_classes, edge_index=edge_index)
 
-    return datax
+    return data
 
 
 def load_facebook_pagepage_dataset():
-    """
-    Loads the FacebookPagePage dataset from the specified path.
-
-    :param dataset_path: Path to the directory containing the raw dataset (e.g., "FacebookPagePage/raw").
-    :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
-    """
 
     pyg_data = FacebookPagePage(root=f"data/FacebookPagePage")
 
@@ -272,12 +247,7 @@ def load_facebook_pagepage_dataset():
 
 
 def load_lastfmasia_dataset():
-    """
-    Loads the LastFMAsia dataset from the specified path.
 
-    :param dataset_path: Path to the directory containing the raw dataset (e.g., "LastFMAsia/raw").
-    :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
-    """
     pyg_data = LastFMAsia(root=f"data/LastFMAsia")
 
     # Load the raw data
@@ -313,12 +283,6 @@ def load_lastfmasia_dataset():
 
 
 def load_deezereurope_dataset():
-    """
-    Loads the DeezerEurope dataset from the specified path.
-
-    :param dataset_path: Path to the directory containing the raw dataset (e.g., "DeezerEurope/raw").
-    :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
-    """
 
     pyg_data = LastFMAsia(root=f"data/DeezerEurope")
 
@@ -355,12 +319,6 @@ def load_deezereurope_dataset():
 
 
 def load_actor_dataset():
-    """
-    Loads the Actor dataset from the specified path.
-
-    :param dataset_path: Path to the directory containing the raw dataset (e.g., "Actor/raw").
-    :return: adjacency (sparse matrix), features (numpy array), labels (numpy array)
-    """
 
     pyg_data = Actor(root=f"data/Actor")
 
@@ -421,13 +379,6 @@ def load_actor_dataset():
     return data
 
 def load_amazon_dataset(dataset_type):
-    """
-    Loads the Amazon dataset from the specified path.
-
-    :param dataset_path: Path to the directory containing the raw dataset (e.g., "Amazon/Computers/raw").
-    :param dataset_type: Type of dataset, e.g., "Computers" or "Photos".
-    :return: adjacency (sparse matrix), features (numpy array), labels (numpy array), train_mask, val_mask, test_mask
-    """
 
     pyg_data = Amazon(root=f"data/Amazon", name=dataset_type)
 

@@ -119,6 +119,8 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
     start_time = datetime.now()
     is_large = config["isLarge"]
     epochs = config["epochs"]
+    batch_size_train = None
+    batch_size_test = None
     if is_large:
         batch_size_train = config["batch_size_train"]
         batch_size_test = config["batch_size_test"]
@@ -154,10 +156,10 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
     for epoch in range(1, epochs):
-        loss = train(model, optimizer, device, train_loader)
+        loss = train(model, optimizer, device, train_loader, dataset_name=dataset_choice)
         logger.debug(f'Epoch {epoch}: Loss: {loss:.4f}')
 
-    accuracy = evaluate(model, device, test_loader)
+    accuracy = evaluate(model, device, test_loader, dataset_name=dataset_choice)
     logger.info(f"Test Accuracy: {accuracy:.4f}")
 
     finish_time = datetime.now()
@@ -184,7 +186,6 @@ def run_clustering_with_SGNN(dataset_choice, config):
     start_time = datetime.now()
 
     adjacency, features, labels, train_mask, val_mask, test_mask  = get_training_data(dataset_choice)
-
 
     mask_rate = config["mask_rate"]
     overlook_rates = config["overlook_rates"]
@@ -282,6 +283,7 @@ def run_clustering_with_SGNN(dataset_choice, config):
     print(f"Official efficiency: {efficiency}")
 
     return accuracy, efficiency, nmi, dataset_name
+
 
 def get_activation(current_layer_activation):
 

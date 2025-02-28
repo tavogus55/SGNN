@@ -16,14 +16,17 @@ class SGC(torch.nn.Module):
 
 
 # Training function
-def train(model, optimizer, device, train_loader):
+def train(model, optimizer, device, train_loader, dataset_name=None):
     model.train()
     total_loss = 0
     for batch in train_loader:
         optimizer.zero_grad()
         batch = batch.to(device)
         out = model(batch.x, batch.edge_index)
-        loss = F.nll_loss(out[batch.train_mask], batch.y[batch.train_mask])  # Now `batch.y` is 1D
+        if dataset_name == 'Arxiv' or dataset_name == 'Mag' or dataset_name == 'Products':
+            loss = F.nll_loss(out, batch.y)
+        else:
+            loss = F.nll_loss(out[batch.train_mask], batch.y[batch.train_mask])  # Now `batch.y` is 1D
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
@@ -31,7 +34,7 @@ def train(model, optimizer, device, train_loader):
 
 
 # Evaluation function
-def evaluate(model, device, test_loader):
+def evaluate(model, device, test_loader, dataset_name=''):
     model.eval()
     correct = 0
     total = 0
@@ -40,6 +43,10 @@ def evaluate(model, device, test_loader):
             batch = batch.to(device)
             out = model(batch.x, batch.edge_index)
             pred = out.argmax(dim=1)
-            correct += (pred[batch.test_mask] == batch.y[batch.test_mask]).sum().item()
-            total += batch.test_mask.sum().item()
+            if dataset_name == 'Arxiv' or dataset_name == 'Mag' or dataset_name == 'Products':
+                correct += (pred == batch.y).sum().item()
+                total += batch.y.size(0)
+            else:
+                correct += (pred[batch.test_mask] == batch.y[batch.test_mask]).sum().item()
+                total += batch.test_mask.sum().item()
     return correct / total
