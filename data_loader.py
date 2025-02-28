@@ -40,7 +40,7 @@ def get_training_data(dataset_choice):
     elif dataset_choice == "Reddit":
         data = load_reddit_data()
     elif dataset_choice == "Yelp":
-        data = load_yelp_data2()
+        data = load_yelp_data()
     elif dataset_choice == "Arxiv":
         data = load_ogbn_dataset(dataset_choice.lower())
     elif dataset_choice == "Products":
@@ -52,6 +52,7 @@ def get_training_data(dataset_choice):
         exit()
 
     return data
+
 
 def loadRedditFromNPZ(dataset_dir: str):
     # Load NPZ files for NPZ-based Reddit data
@@ -94,18 +95,13 @@ def load_reddit_data(dataset_dir: str = "data/") -> Data:
 
     # Load built-in Reddit dataset for reference (do not use for training here)
     pyg_data = Reddit(root='./data/Reddit2')
+    num_features = pyg_data.num_features
+    num_classes = pyg_data.num_classes
 
-    data = Data(
-        x=features,
-        y=labels,
-        train_mask=train_mask,
-        val_mask=val_mask,
-        test_mask=test_mask,
-        edge_index=edge_index,
-        adjacency=adj,
-        pyg_data=pyg_data
-    )
+    data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask, test_mask=test_mask,
+                 adjacency=adj, num_features=num_features, num_classes=num_classes, edge_index=edge_index)
     return data
+
 
 def load_ogbn_dataset(dataset_n):
 
@@ -196,35 +192,7 @@ def load_flickr_data():
 
     return data
 
-
 def load_yelp_data():
-
-    pyg_data = Yelp(root='./data/Yelp')
-    yelp_data = pyg_data[0]
-
-    # Convert multi-label to single-label (pick the dominant label)
-    labels = yelp_data.y.argmax(dim=1)
-
-    # Remap labels to ensure they are sequential from 0 to num_classes-1
-    unique_classes = torch.unique(labels)
-    mapping = {old_label.item(): new_label for new_label, old_label in enumerate(unique_classes)}
-    labels = torch.tensor([mapping[label.item()] for label in labels], dtype=torch.long)
-
-    # Convert adjacency to sparse matrix
-    adjacency = to_scipy_sparse_matrix(yelp_data.edge_index, num_nodes=yelp_data.num_nodes)
-
-    # Extract features
-    features = yelp_data.x
-
-    # Extract masks
-    train_mask, val_mask, test_mask = yelp_data.train_mask, yelp_data.val_mask, yelp_data.test_mask
-
-    datax = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask, test_mask=test_mask,
-                 adjacency=adjacency, pyg_data=pyg_data)
-
-    return datax
-
-def load_yelp_data2():
 
     # Load Yelp dataset
     dataset = Yelp(root='data/Yelp')
@@ -234,11 +202,28 @@ def load_yelp_data2():
 
     # Convert multi-label to single-label by taking the dominant label
     data.y = torch.argmax(data.y, dim=1)  # Ensure y is a 1D tensor
+    labels = data.y
 
     # Add self-loops (SGC requires this)
     data.edge_index, _ = add_self_loops(data.edge_index, num_nodes=data.num_nodes)
 
-    return data, dataset
+    edge_index = data.edge_index
+
+    # Extract masks
+    train_mask, val_mask, test_mask = data.train_mask, data.val_mask, data.test_mask
+
+    # Convert adjacency to sparse matrix
+    adjacency = to_scipy_sparse_matrix(data.edge_index, num_nodes=data.num_nodes)
+
+    features = data.x
+
+    num_features = dataset.num_node_features
+    num_classes = dataset.num_classes
+
+    datax = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask, test_mask=test_mask,
+                 adjacency=adjacency, num_features=num_features, num_classes=num_classes, edge_index=edge_index)
+
+    return datax
 
 
 def load_facebook_pagepage_dataset():

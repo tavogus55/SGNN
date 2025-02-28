@@ -120,41 +120,44 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
     is_large = config["isLarge"]
     epochs = config["epochs"]
     if is_large:
-        batch_size = config["batch_size"]
+        batch_size_train = config["batch_size_train"]
+        batch_size_test = config["batch_size_test"]
     learning_rate = config["learning_rate"]
     weight_decay = config["weight_decay"]
 
     device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
-    data, dataset = get_training_data(dataset_choice)
+    data = get_training_data(dataset_choice)
 
     if is_large:
         train_loader = NeighborLoader(
             data,
             num_neighbors=[10, 10],  # Sample 10 neighbors per layer
-            batch_size=1024,
+            batch_size=batch_size_train,
             input_nodes=data.train_mask
         )
 
         test_loader = NeighborLoader(
             data,
             num_neighbors=[10, 10],
-            batch_size=2048,
+            batch_size=batch_size_test,
             input_nodes=data.test_mask
         )
     else:
         train_loader = None
         test_loader = None
 
-    num_features = dataset.num_node_features
-    num_classes = dataset.num_classes
+    num_features = data.num_node_features
+    num_classes = data.num_classes
 
     model = SGC(num_features, num_classes).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
-    train(model, optimizer, device, train_loader)
-    accuracy = evaluate(model, device, test_loader)
+    for epoch in range(1, epochs):
+        loss = train(model, optimizer, device, train_loader)
+        logger.debug(f'Epoch {epoch}: Loss: {loss:.4f}')
 
+    accuracy = evaluate(model, device, test_loader)
     logger.info(f"Test Accuracy: {accuracy:.4f}")
 
     finish_time = datetime.now()

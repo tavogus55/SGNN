@@ -615,35 +615,37 @@
                 "isLarge": false
             },
             "Reddit": {
-                "epochs": 1,
+                "epochs": 100,
                 "learning_rate": 0.01,
-                "batch_size": 512,
+                "batch_size_train": 1024,
+                "batch_size_test": 2048,
                 "weight_decay": 0.0005,
                 "isLarge": true
             },
             "Yelp": {
-                "epochs": 1,
+                "epochs": 100,
                 "learning_rate": 0.01,
-                "batch_size": 512,
+                "batch_size_train": 1024,
+                "batch_size_test": 2048,
                 "weight_decay": 0.0005,
                 "isLarge": true
             },
             "Arxiv": {
-                "epochs": 2,
+                "epochs": 1,
                 "learning_rate": 0.01,
                 "batch_size": 512,
                 "weight_decay": 0.0005,
                 "isLarge": true
             },
             "Products": {
-                "epochs": 2,
+                "epochs": 1,
                 "learning_rate": 0.01,
                 "batch_size": 512,
                 "weight_decay": 0.0005,
                 "isLarge": true
             },
             "Mag": {
-                "epochs": 2,
+                "epochs": 1,
                 "learning_rate": 0.01,
                 "batch_size": 512,
                 "weight_decay": 0.0005,
