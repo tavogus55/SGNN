@@ -1,5 +1,5 @@
 from torch.fx.passes.infra.partitioner import logger
-from model.SGC import SGC, train, test
+from model.SGC import SGC, train, evaluate
 from model.SGNN import *
 from data_loader import get_training_data
 import warnings
@@ -125,27 +125,35 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
     weight_decay = config["weight_decay"]
 
     device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
-    training_data = get_training_data(dataset_choice)
-    pyg_data = training_data.pyg_data.to(device)
-    training_data = training_data.to(device)
+    data, dataset = get_training_data(dataset_choice)
 
     if is_large:
-        loader = NeighborLoader(pyg_data[0], num_neighbors=[15, 10], batch_size=batch_size,
-                                input_nodes=training_data.train_mask)
+        train_loader = NeighborLoader(
+            data,
+            num_neighbors=[10, 10],  # Sample 10 neighbors per layer
+            batch_size=1024,
+            input_nodes=data.train_mask
+        )
+
+        test_loader = NeighborLoader(
+            data,
+            num_neighbors=[10, 10],
+            batch_size=2048,
+            input_nodes=data.test_mask
+        )
     else:
-        loader = None
+        train_loader = None
+        test_loader = None
 
-    num_features = pyg_data.num_node_features
-    num_classes = pyg_data.num_classes
+    num_features = dataset.num_node_features
+    num_classes = dataset.num_classes
 
-    pyg_data = pyg_data[0]
-
-    model = SGC(num_features, 128, num_classes).to(device)
+    model = SGC(num_features, num_classes).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
-    train(model, pyg_data, optimizer, epochs, training_data.train_mask, logger=logger, loader=loader)
-    accuracy = test(model, pyg_data, training_data.test_mask, loader=loader)
+    train(model, optimizer, device, train_loader)
+    accuracy = evaluate(model, device, test_loader)
 
     logger.info(f"Test Accuracy: {accuracy:.4f}")
 

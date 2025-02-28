@@ -12,6 +12,7 @@ from torch_geometric.utils import to_scipy_sparse_matrix, from_scipy_sparse_matr
 from torch_geometric.data import Data
 from torch_geometric.datasets import (Planetoid, Reddit, Flickr, FacebookPagePage, Actor, LastFMAsia, DeezerEurope,
                                       Amazon, Yelp)
+from torch_geometric.utils import add_self_loops
 
 YALE = 'Yale'
 UMIST = 'UMIST'
@@ -39,7 +40,7 @@ def get_training_data(dataset_choice):
     elif dataset_choice == "Reddit":
         data = load_reddit_data()
     elif dataset_choice == "Yelp":
-        data = load_yelp_data()
+        data = load_yelp_data2()
     elif dataset_choice == "Arxiv":
         data = load_ogbn_dataset(dataset_choice.lower())
     elif dataset_choice == "Products":
@@ -218,10 +219,26 @@ def load_yelp_data():
     # Extract masks
     train_mask, val_mask, test_mask = yelp_data.train_mask, yelp_data.val_mask, yelp_data.test_mask
 
-    datax = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask,
-                test_mask=test_mask, adjacency=adjacency, pyg_data=pyg_data)
+    datax = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask, test_mask=test_mask,
+                 adjacency=adjacency, pyg_data=pyg_data)
 
     return datax
+
+def load_yelp_data2():
+
+    # Load Yelp dataset
+    dataset = Yelp(root='data/Yelp')
+
+    # Select the first (and only) graph in the dataset
+    data = dataset[0]
+
+    # Convert multi-label to single-label by taking the dominant label
+    data.y = torch.argmax(data.y, dim=1)  # Ensure y is a 1D tensor
+
+    # Add self-loops (SGC requires this)
+    data.edge_index, _ = add_self_loops(data.edge_index, num_nodes=data.num_nodes)
+
+    return data, dataset
 
 
 def load_facebook_pagepage_dataset():
