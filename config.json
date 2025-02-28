@@ -617,8 +617,8 @@
             "Reddit": {
                 "epochs": 100,
                 "learning_rate": 0.01,
-                "batch_size_train": 1024,
-                "batch_size_test": 2048,
+                "batch_size_train": 512,
+                "batch_size_test": 1024,
                 "weight_decay": 0.0005,
                 "isLarge": true
             },
@@ -633,21 +633,24 @@
             "Arxiv": {
                 "epochs": 1,
                 "learning_rate": 0.01,
-                "batch_size": 512,
+                "batch_size_train": 1024,
+                "batch_size_test": 2048,
                 "weight_decay": 0.0005,
                 "isLarge": true
             },
             "Products": {
                 "epochs": 1,
                 "learning_rate": 0.01,
-                "batch_size": 512,
+                "batch_size_train": 1024,
+                "batch_size_test": 2048,
                 "weight_decay": 0.0005,
                 "isLarge": true
             },
             "Mag": {
                 "epochs": 1,
                 "learning_rate": 0.01,
-                "batch_size": 512,
+                "batch_size_train": 1024,
+                "batch_size_test": 2048,
                 "weight_decay": 0.0005,
                 "isLarge": true
             }

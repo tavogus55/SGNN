@@ -98,8 +98,8 @@ def load_reddit_data(dataset_dir: str = "data/") -> Data:
     num_features = pyg_data.num_features
     num_classes = pyg_data.num_classes
 
-    data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask, test_mask=test_mask,
-                 adjacency=adj, num_features=num_features, num_classes=num_classes, edge_index=edge_index)
+    data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask, test_mask=test_mask, adjacency=adj,
+                num_features=num_features, num_classes=num_classes, edge_index=edge_index)
     return data
 
 
@@ -192,6 +192,7 @@ def load_flickr_data():
 
     return data
 
+
 def load_yelp_data():
 
     # Load Yelp dataset
@@ -201,8 +202,10 @@ def load_yelp_data():
     data = dataset[0]
 
     # Convert multi-label to single-label by taking the dominant label
-    data.y = torch.argmax(data.y, dim=1)  # Ensure y is a 1D tensor
-    labels = data.y
+    labels = data.y.argmax(dim=1)
+    unique_classes = torch.unique(labels)
+    mapping = {old_label.item(): new_label for new_label, old_label in enumerate(unique_classes)}
+    labels = torch.tensor([mapping[label.item()] for label in labels], dtype=torch.long)
 
     # Add self-loops (SGC requires this)
     data.edge_index, _ = add_self_loops(data.edge_index, num_nodes=data.num_nodes)
