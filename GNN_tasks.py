@@ -37,7 +37,7 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
 
     features = features.to(device)
     layer_config = config["layers"]
-    lam = eval(config["lam"].replace("^", "**"))
+    lam = config["lam"]
 
     # ========== layers setting ==========
 
@@ -55,12 +55,12 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
         if is_large:
             layer_to_add = LayerParam(layer["neurons"], inner_act=chosen_inner_act, act=chosen_act,
                                       gnn_type=LayerParam.EGCN,
-                                      learning_rate=eval(layer["learning_rate"].replace("^", "**")),
+                                      learning_rate=layer["learning_rate"],
                                       max_iter=layer["max_iter"], lam=lam, batch_size=layer["batch_size"])
         else:
             layer_to_add = LayerParam(layer["neurons"], inner_act=chosen_inner_act, act=chosen_act,
                                       gnn_type=LayerParam.EGCN,
-                                      learning_rate=eval(layer["learning_rate"].replace("^", "**")),
+                                      learning_rate=layer["learning_rate"],
                                       order=layer["order"], max_iter=layer["max_iter"],
                                       lam=lam,batch_size=layer["batch_size"])
 
@@ -194,8 +194,8 @@ def run_clustering_with_SGNN(dataset_choice, config):
     max_iter = config["max_iter"]
     batch_size = config["batch"]
     BP_count = config["BP_count"]
-    learning_rate = eval(config["learning_rate"].replace("^", "**"))
-    lam = eval(config["lam"].replace("^", "**"))
+    learning_rate = ["learning_rate"]
+    lam = config["lam"]
     eta = config["eta"]
     loss = config["loss"]
     negative_slope = config["negative_slope"]

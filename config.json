@@ -12,8 +12,8 @@
                 "max_iter": 100,
                 "batch": 128,
                 "BP_count": 10,
-                "learning_rate": "10^-3",
-                "lam": "10^-6",
+                "learning_rate": 0.001,
+                "lam": 0.000001,
                 "eta": 1,
                 "loss": "loss1 / sample_size",
                 "negative_slope": 0.2
@@ -28,8 +28,8 @@
                 "max_iter": 100,
                 "batch": 4096,
                 "BP_count": 10,
-                "learning_rate": "10^-4",
-                "lam": "10^-6",
+                "learning_rate": 0.0001,
+                "lam": 0.000001,
                 "order": 2,
                 "eta": 10,
                 "loss": "loss1",
@@ -47,8 +47,8 @@
                 "max_iter": 100,
                 "batch": 256,
                 "BP_count": 5,
-                "learning_rate": "10^-4",
-                "lam": "10^-6",
+                "learning_rate": 0.0001,
+                "lam": 0.000001,
                 "eta": 10,
                 "loss": "loss1",
                 "order": 2,
@@ -66,8 +66,8 @@
                 "max_iter": 100,
                 "batch": 256,
                 "BP_count": 5,
-                "learning_rate": "10^-4",
-                "lam": "10^-6",
+                "learning_rate": 0.0001,
+                "lam": 0.000001,
                 "eta": 10,
                 "loss": "loss1",
                 "order": 2,
@@ -85,8 +85,8 @@
                 "max_iter": 100,
                 "batch": 256,
                 "BP_count": 5,
-                "learning_rate": "10^-4",
-                "lam": "10^-6",
+                "learning_rate": 0.0001,
+                "lam": 0.000001,
                 "eta": 10,
                 "loss": "loss1",
                 "order": 2,
@@ -104,8 +104,8 @@
                 "max_iter": 100,
                 "batch": 256,
                 "BP_count": 5,
-                "learning_rate": "10^-4",
-                "lam": "10^-6",
+                "learning_rate": 0.0001,
+                "lam": 0.000001,
                 "eta": 10,
                 "loss": "loss1",
                 "order": 2,
@@ -123,8 +123,8 @@
                 "max_iter": 100,
                 "batch": 256,
                 "BP_count": 5,
-                "learning_rate": "10^-4",
-                "lam": "10^-6",
+                "learning_rate": 0.0001,
+                "lam": 0.000001,
                 "eta": 10,
                 "loss": "loss1",
                 "order": 2,
@@ -142,8 +142,8 @@
                 "max_iter": 100,
                 "batch": 256,
                 "BP_count": 5,
-                "learning_rate": "10^-4",
-                "lam": "10^-6",
+                "learning_rate": 0.0001,
+                "lam": 0.000001,
                 "eta": 10,
                 "loss": "loss1",
                 "order": 2,
@@ -161,8 +161,8 @@
                 "max_iter": 100,
                 "batch": 256,
                 "BP_count": 5,
-                "learning_rate": "10^-4",
-                "lam": "10^-6",
+                "learning_rate": 0.0001,
+                "lam": 0.000001,
                 "eta": 10,
                 "loss": "loss1",
                 "order": 2,
@@ -180,8 +180,8 @@
                 "max_iter": 10000,
                 "batch": 512,
                 "BP_count": 5,
-                "learning_rate": "10^-4",
-                "lam": "10^-6",
+                "learning_rate": 0.0001,
+                "lam": 0.000001,
                 "eta": 10,
                 "loss": "loss1",
                 "order": 2,
@@ -193,7 +193,7 @@
             "Cora": {
                 "eta": 100,
                 "BP_count": 5,
-                "lam": "10^-3",
+                "lam": 0.001,
                 "isLarge": false,
                 "layers": [
                     {
@@ -202,14 +202,14 @@
                         "activation": "leaky_relu=0.2",
                         "order": 1,
                         "batch_size": 2708,
-                        "learning_rate": "10^-2",
+                        "learning_rate": 0.01,
                         "max_iter": 60
                     },
                     {
                         "neurons": 64,
                         "inner_act": "linear",
                         "activation": "relu",
-                        "learning_rate": "10^-2",
+                        "learning_rate": 0.01,
                         "order": 1,
                         "batch_size": 2708,
                         "max_iter": 60
@@ -218,7 +218,7 @@
                         "neurons": 32,
                         "inner_act": "linear",
                         "activation": "linear",
-                        "learning_rate": "10^-2",
+                        "learning_rate": 0.01,
                         "order": 2,
                         "batch_size": 140,
                         "max_iter": 60
@@ -228,14 +228,14 @@
             "Citeseer": {
                 "eta": 100,
                 "BP_count": 3,
-                "lam": "10^-3",
+                "lam": 0.001,
                 "isLarge": false,
                 "layers": [
                     {
                         "neurons": 256,
                         "inner_act": "relu",
                         "activation": "leaky_relu=0.2",
-                        "learning_rate": "10^-2",
+                        "learning_rate": 0.01,
                         "order": 1,
                         "max_iter": 40,
                         "batch_size": 1024
@@ -244,7 +244,7 @@
                         "neurons": 128,
                         "inner_act": "relu",
                         "activation": "linear",
-                        "learning_rate": "10^-3",
+                        "learning_rate": 0.001,
                         "order": 1,
                         "max_iter": 40,
                         "batch_size": 140
@@ -254,14 +254,14 @@
             "PubMed": {
                 "eta": 100,
                 "BP_count": 3,
-                "lam": "10^-3",
+                "lam": 0.001,
                 "isLarge": false,
                 "layers": [
                     {
                         "neurons": 256,
                         "inner_act": "relu",
                         "activation": "leaky_relu=0.2",
-                        "learning_rate": "10^-2",
+                        "learning_rate": 0.01,
                         "order": 1,
                         "max_iter": 100,
                         "batch_size": 8192
@@ -270,7 +270,7 @@
                         "neurons": 128,
                         "inner_act": "relu",
                         "activation": "leaky_relu=0.2",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "order": 2,
                         "max_iter": 40,
                         "batch_size": 2048
@@ -280,14 +280,14 @@
             "Flickr": {
                 "eta": 100,
                 "BP_count": 10,
-                "lam": "10^-4",
+                "lam": 0.0001,
                 "isLarge": false,
                 "layers": [
                     {
                         "neurons": 1024,
                         "inner_act": "linear",
                         "activation": "leaky_relu=0.3",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "order": 1,
                         "max_iter": 300,
                         "batch_size": 8192
@@ -296,7 +296,7 @@
                         "neurons": 32,
                         "inner_act": "tanh",
                         "activation": "leaky_relu=0.2",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "order": 1,
                         "max_iter": 100,
                         "batch_size": 2048
@@ -315,14 +315,14 @@
             "FacebookPagePage": {
                 "eta": 200,
                 "BP_count": 5,
-                "lam": "10^-4",
+                "lam": 0.0001,
                 "isLarge": false,
                 "layers": [
                     {
                         "neurons": 512,
                         "inner_act": "relu",
                         "activation": "leaky_relu=0.2",
-                        "learning_rate": "10^-3",
+                        "learning_rate": 0.001,
                         "order": 2,
                         "max_iter": 200,
                         "batch_size": 4096
@@ -331,7 +331,7 @@
                         "neurons": 256,
                         "inner_act": "relu",
                         "activation": "leaky_relu=0.1",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "order": 2,
                         "max_iter": 100,
                         "batch_size": 2048
@@ -376,14 +376,14 @@
             "LastFMAsia": {
                 "eta": 200,
                 "BP_count": 5,
-                "lam": "10^-4",
+                "lam": 0.0001,
                 "isLarge": false,
                 "layers": [
                     {
                         "neurons": 512,
                         "inner_act": "relu",
                         "activation": "leaky_relu=0.2",
-                        "learning_rate": "10^-3",
+                        "learning_rate": 0.001,
                         "order": 2,
                         "max_iter": 200,
                         "batch_size": 4096
@@ -392,7 +392,7 @@
                         "neurons": 256,
                         "inner_act": "relu",
                         "activation": "leaky_relu=0.1",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "order": 2,
                         "max_iter": 100,
                         "batch_size": 2048
@@ -402,7 +402,7 @@
             "DeezerEurope": {
                 "eta": 1,
                 "BP_count": 7,
-                "lam": "10^-4",
+                "lam": 0.0001,
                 "isLarge": false,
                 "layers": [
                     {
@@ -418,7 +418,7 @@
                         "neurons": 32,
                         "inner_act": "linear",
                         "activation": "leaky_relu=0.2",
-                        "learning_rate": "10^-2",
+                        "learning_rate": 0.01,
                         "order": 1,
                         "max_iter": 100,
                         "batch_size": 8192
@@ -428,7 +428,7 @@
             "Amazon Photo": {
                 "eta": 1,
                 "BP_count": 10,
-                "lam": "10^-4",
+                "lam": 0.0001,
                 "isLarge": false,
                 "layers": [
                     {
@@ -444,7 +444,7 @@
                         "neurons": 256,
                         "inner_act": "relu",
                         "activation": "linear",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "order": 1,
                         "max_iter": 600,
                         "batch_size": 140
@@ -454,14 +454,14 @@
             "Amazon Computers": {
                 "eta": 200,
                 "BP_count": 5,
-                "lam": "10^-4",
+                "lam": 0.0001,
                 "isLarge": false,
                 "layers": [
                     {
                         "neurons": 512,
                         "inner_act": "relu",
                         "activation": "leaky_relu=0.2",
-                        "learning_rate": "10^-3",
+                        "learning_rate": 0.001,
                         "order": 2,
                         "max_iter": 200,
                         "batch_size": 4096
@@ -470,7 +470,7 @@
                         "neurons": 256,
                         "inner_act": "relu",
                         "activation": "leaky_relu=0.1",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "order": 2,
                         "max_iter": 100,
                         "batch_size": 2048
@@ -480,14 +480,14 @@
             "Reddit": {
                 "eta": 1000,
                 "BP_count": 5,
-                "lam": "10^-6",
+                "lam": 0.000001,
                 "isLarge": true,
                 "layers": [
                     {
                         "neurons": 128,
                         "inner_act": "leaky_relu=0.2",
                         "activation": "linear",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "max_iter": 10000,
                         "batch_size": 512
                     },
@@ -495,7 +495,7 @@
                         "neurons": 64,
                         "inner_act": "leaky_relu=0.2",
                         "activation": "linear",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "max_iter": 10000,
                         "batch_size": 512
                     }
@@ -504,14 +504,14 @@
             "Yelp": {
                 "eta": 1000,
                 "BP_count": 5,
-                "lam": "10^-6",
+                "lam": 0.000001,
                 "isLarge": true,
                 "layers": [
                     {
                         "neurons": 128,
                         "inner_act": "leaky_relu=0.2",
                         "activation": "linear",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "max_iter": 10000,
                         "batch_size": 512
                     },
@@ -519,7 +519,7 @@
                         "neurons": 64,
                         "inner_act": "leaky_relu=0.2",
                         "activation": "linear",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "max_iter": 10000,
                         "batch_size": 512
                     }
@@ -528,14 +528,14 @@
             "Arxiv": {
                 "eta": 1000,
                 "BP_count": 5,
-                "lam": "10^-6",
+                "lam": 0.000001,
                 "isLarge": true,
                 "layers": [
                     {
                         "neurons": 128,
                         "inner_act": "leaky_relu=0.2",
                         "activation": "linear",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "max_iter": 10000,
                         "batch_size": 512
                     },
@@ -543,7 +543,7 @@
                         "neurons": 64,
                         "inner_act": "leaky_relu=0.2",
                         "activation": "linear",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "max_iter": 10000,
                         "batch_size": 512
                     }
@@ -552,14 +552,14 @@
             "Products": {
                 "eta": 1000,
                 "BP_count": 5,
-                "lam": "10^-6",
+                "lam": 0.000001,
                 "isLarge": true,
                 "layers": [
                     {
                         "neurons": 128,
                         "inner_act": "leaky_relu=0.2",
                         "activation": "linear",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "max_iter": 10000,
                         "batch_size": 512
                     },
@@ -567,7 +567,7 @@
                         "neurons": 64,
                         "inner_act": "leaky_relu=0.2",
                         "activation": "linear",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "max_iter": 10000,
                         "batch_size": 512
                     }
@@ -576,13 +576,13 @@
             "Mag": {
                 "eta": 1000,
                 "BP_count": 5,
-                "lam": "10^-6",
+                "lam": 0.000001,
                 "layers": [
                     {
                         "neurons": 128,
                         "inner_act": "leaky_relu=0.2",
                         "activation": "linear",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "max_iter": 10000,
                         "batch_size": 512,
                         "isLarge": true
@@ -591,7 +591,7 @@
                         "neurons": 64,
                         "inner_act": "leaky_relu=0.2",
                         "activation": "linear",
-                        "learning_rate": "10^-4",
+                        "learning_rate": 0.0001,
                         "max_iter": 10000,
                         "batch_size": 512,
                         "isLarge": true
