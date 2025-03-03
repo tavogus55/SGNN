@@ -26,7 +26,7 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
     n_class = np.unique(labels).shape[0]
     if (type(features) is not np.ndarray and dataset_choice != "Reddit" and dataset_choice != "Mag"
             and dataset_choice != "Yelp"):
-        features = features.todense()
+        features = features.to_dense()
     features = torch.Tensor(features)
     device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
 
@@ -151,15 +151,16 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
     num_features = data.num_node_features
     num_classes = data.num_classes
 
-    model = SGC(num_features, num_classes).to(device)
+    data = data.to(device)
+    model = SGC(data).to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
     for epoch in range(1, epochs):
-        loss = train(model, optimizer, device, train_loader, dataset_name=dataset_choice)
+        loss = train(model, optimizer, device, data, train_loader=train_loader, dataset_name=dataset_choice)
         logger.debug(f'Epoch {epoch}: Loss: {loss:.4f}')
 
-    accuracy = evaluate(model, device, test_loader, dataset_name=dataset_choice)
+    accuracy = evaluate(model, device, data, test_loader=test_loader, dataset_name=dataset_choice)
     logger.info(f"Test Accuracy: {accuracy:.4f}")
 
     finish_time = datetime.now()

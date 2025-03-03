@@ -603,6 +603,18 @@
     "SGC": {
         "Classification": {
             "Cora": {
+                "epochs": 500,
+                "learning_rate": 0.01,
+                "weight_decay": 0.0005,
+                "isLarge": false
+            },
+            "Citeseer": {
+                "epochs": 800,
+                "learning_rate": 0.01,
+                "weight_decay": 0.0005,
+                "isLarge": false
+            },
+            "Pubmed": {
                 "epochs": 100,
                 "learning_rate": 0.01,
                 "weight_decay": 0.0005,
