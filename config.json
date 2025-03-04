@@ -229,11 +229,12 @@
                 "eta": 200,
                 "BP_count": 3,
                 "lam": 0.001,
+                "isLarge": false,
                 "layers": [
                     {
                         "neurons": 2024,
-                        "inner_act": 1,
-                        "activation": 2,
+                        "inner_act": "tanh",
+                        "activation": "relu",
                         "learning_rate": 0.00001,
                         "order": 3,
                         "max_iter": 100,
@@ -241,8 +242,8 @@
                     },
                     {
                         "neurons": 64,
-                        "inner_act": 1,
-                        "activation": 0,
+                        "inner_act": "tanh",
+                        "activation": "linear",
                         "learning_rate": 0.00001,
                         "order": 3,
                         "max_iter": 150,
