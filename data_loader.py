@@ -317,14 +317,13 @@ def load_deezereurope_dataset():
 
     return data
 
-
 def load_actor_dataset():
 
-    pyg_data = Actor(root=f"data/Actor")
+    data = Actor(root=f"data/Actor")
 
     # File paths
-    edges_file = f"data/Actor/raw/out1_graph_edges.txt"
-    features_labels_file = f"data/Actor/raw/out1_node_feature_label.txt"
+    edges_file = "data/Actor/raw/out1_graph_edges.txt"
+    features_labels_file = "data/Actor/raw/out1_node_feature_label.txt"
 
     # Load edges (tab-separated values)
     edges = np.loadtxt(edges_file, dtype=int, delimiter="\t", skiprows=1)
@@ -352,8 +351,9 @@ def load_actor_dataset():
     for i, feature_row in enumerate(features):
         padded_features[i, :len(feature_row)] = feature_row
 
-    # Convert labels to numpy array
-    labels = np.array(labels, dtype=np.int64)  # Ensure int64 for compatibility with PyTorch
+    # Convert to PyTorch tensors
+    features = torch.tensor(padded_features, dtype=torch.float32)
+    labels = torch.tensor(labels, dtype=torch.long)  # Ensure long dtype for classification
 
     # Create adjacency matrix
     num_nodes = len(features)
@@ -361,22 +361,37 @@ def load_actor_dataset():
         (np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
         shape=(num_nodes, num_nodes),
         dtype=np.float32
-    ).tocsc()
+    )
+
+    # Convert adjacency matrix to PyG format
+    edge_index, _ = from_scipy_sparse_matrix(adjacency)
 
     # Generate train/validation/test masks manually
-    train_mask = np.zeros(num_nodes, dtype=bool)
-    val_mask = np.zeros(num_nodes, dtype=bool)
-    test_mask = np.zeros(num_nodes, dtype=bool)
+    train_mask = torch.zeros(num_nodes, dtype=torch.bool)
+    val_mask = torch.zeros(num_nodes, dtype=torch.bool)
+    test_mask = torch.zeros(num_nodes, dtype=torch.bool)
 
     # Example: First 70% for training, next 15% for validation, last 15% for testing
     train_mask[: int(0.7 * num_nodes)] = True
     val_mask[int(0.7 * num_nodes): int(0.85 * num_nodes)] = True
     test_mask[int(0.85 * num_nodes):] = True
 
-    data = Data(x=features, y=labels, train_mask=train_mask, val_mask=val_mask,
-                test_mask=test_mask, adjacency=adjacency, pyg_data=pyg_data)
+    # Create PyG Data object
+    data_obj = Data(
+        x=features,
+        y=labels,
+        train_mask=train_mask,
+        val_mask=val_mask,
+        test_mask=test_mask,
+        adjacency=adjacency,
+        num_features=data.num_features,
+        num_classes=data.num_classes,  # Number of unique classes
+        edge_index=edge_index
+    )
 
-    return data
+    return data_obj
+
+
 
 def load_amazon_dataset(dataset_type):
 

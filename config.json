@@ -339,37 +339,37 @@
                 ]
             },
             "Actor": {
-                "eta": 200,
-                "BP_count": 7,
-                "lam": 0.001,
+                "eta": 300,
+                "BP_count": 5,
+                "lam": 0.000001 ,
                 "isLarge": false,
                 "layers": [
                     {
-                        "neurons": 512,
-                        "inner_act": 2,
-                        "activation": "relu",
-                        "learning_rate": 0.00005,
-                        "order": 4,
-                        "max_iter": 150,
-                        "batch_size": 256
+                        "neurons": 1024,
+                        "inner_act": "tanh",
+                        "activation": "leaky_relu=0.05",
+                        "learning_rate": 0.000025,
+                        "order": 5,
+                        "max_iter": 200,
+                        "batch_size": 128
                     },
                     {
-                        "neurons": 768,
-                        "inner_act": 1,
+                        "neurons": 512,
+                        "inner_act": "relu",
                         "activation": "relu",
                         "learning_rate": 0.00001,
-                        "order": 1,
-                        "max_iter": 200,
-                        "batch_size": 2708
+                        "order": 3,
+                        "max_iter": 150,
+                        "batch_size": 128
                     },
                     {
-                        "neurons": 64,
-                        "inner_act": 1,
-                        "activation": "leaky_relu=0.3",
-                        "learning_rate": 0.0001,
-                        "order": 5,
-                        "max_iter": 60,
-                        "batch_size": 256
+                        "neurons": 256,
+                        "inner_act": "relu",
+                        "activation": "leaky_relu=0.05",
+                        "learning_rate": 0.000005,
+                        "order": 3,
+                        "max_iter": 100,
+                        "batch_size": 64
                     }
                 ]
             },
