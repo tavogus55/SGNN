@@ -609,9 +609,9 @@
                 "isLarge": false
             },
             "Citeseer": {
-                "epochs": 800,
+                "epochs": 100,
                 "learning_rate": 0.01,
-                "weight_decay": 0.0005,
+                "weight_decay": 0.05,
                 "isLarge": false
             },
             "Pubmed": {
