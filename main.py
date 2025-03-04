@@ -71,6 +71,7 @@ def main(cuda_num, dataset_decision, model_decision, task_type, exp_times, isTun
         with open('./config.json', 'r') as file:
             settings = json.load(file)
             config = settings[model_decision][task_type][dataset_decision]
+            logger.info(json.dumps(config, indent=4))
         run_experiment(cuda_num, exp_times, config, dataset_decision, model_decision, logger=logger)
     else:
         tuning_accuracy_list = []
