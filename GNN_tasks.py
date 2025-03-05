@@ -1,10 +1,14 @@
-from torch.fx.passes.infra.partitioner import logger
 from model.SGC import SGC, train, evaluate
 from model.SGNN import *
 from data_loader import get_training_data
 import warnings
 from datetime import datetime
 from torch_geometric.loader import NeighborLoader
+import torch.distributed as dist
+import os
+from torch.nn.parallel import DistributedDataParallel as DDP
+import json
+from utils import get_logger
 
 warnings.filterwarnings('ignore')
 utils.set_seed(0)
@@ -114,7 +118,18 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
     return accuracy, efficiency, total_seconds
 
 
-def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
+def run_classification_with_SGC(rank, world_size, dataset_choice, config, return_queue):
+
+    accuracy = None
+
+    with open("global_settings.json", "r") as file:
+        ddp = json.load(file)["ddp"]
+
+    if ddp:
+        """Train function for distributed training"""
+        os.environ["MASTER_ADDR"] = "localhost"
+        os.environ["MASTER_PORT"] = "12355"
+        dist.init_process_group("nccl", rank=rank, world_size=world_size)
 
     start_time = datetime.now()
     is_large = config["isLarge"]
@@ -127,7 +142,15 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
     learning_rate = config["learning_rate"]
     weight_decay = config["weight_decay"]
 
-    device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
+    if ddp:
+        device = torch.device(f"cuda:{rank}" if torch.cuda.is_available() else "cpu")
+    else:
+        device = torch.device(f"cuda:0" if torch.cuda.is_available() else "cpu")
+
+    torch.cuda.set_device(device)
+
+    logger = get_logger()
+
     data = get_training_data(dataset_choice)
 
     if is_large:
@@ -148,11 +171,11 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
         train_loader = None
         test_loader = None
 
-    num_features = data.num_node_features
-    num_classes = data.num_classes
-
     data = data.to(device)
     model = SGC(data).to(device)
+    if ddp:
+        model = DDP(model, device_ids=[rank])
+
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
@@ -160,8 +183,18 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
         loss = train(model, optimizer, device, data, train_loader=train_loader, dataset_name=dataset_choice)
         logger.debug(f'Epoch {epoch}: Loss: {loss:.4f}')
 
-    accuracy = evaluate(model, device, data, test_loader=test_loader, dataset_name=dataset_choice)
-    logger.info(f"Test Accuracy: {accuracy:.4f}")
+    # Synchronize before evaluation
+    if ddp:
+        dist.barrier()
+        if rank == 0:
+            accuracy = evaluate(model, device, data, test_loader=test_loader, dataset_name=dataset_choice)
+            logger.info(f"Test Accuracy: {accuracy:.4f}")
+    else:
+        accuracy = evaluate(model, device, data, test_loader=test_loader, dataset_name=dataset_choice)
+        logger.info(f"Test Accuracy: {accuracy:.4f}")
+
+
+
 
     finish_time = datetime.now()
     time_difference = finish_time - start_time
@@ -179,7 +212,13 @@ def run_classification_with_SGC(cuda_num, dataset_choice, config, logger=None):
     efficiency = total_seconds / total_iterations
     logger.info(f"Official efficiency: {efficiency}")
 
-    return accuracy, efficiency, total_seconds
+    if ddp:
+        if rank == 0:
+            return_queue.put((accuracy, efficiency, total_seconds))
+
+        dist.destroy_process_group()
+    else:
+        return accuracy, efficiency, total_seconds
 
 
 def run_clustering_with_SGNN(dataset_choice, config):

@@ -85,7 +85,7 @@ def load_reddit_data(dataset_dir: str = "data/") -> Data:
     test_mask = torch.BoolTensor(np.isin(np.arange(num_nodes), test_index))
 
     # Load built-in Reddit dataset for reference (do not use for training here)
-    pyg_data = Reddit(root='./data/Reddit2')
+    pyg_data = Reddit(root='./data/Reddit')
     num_features = pyg_data.num_features
     num_classes = pyg_data.num_classes
 

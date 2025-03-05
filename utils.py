@@ -255,6 +255,7 @@ def set_arg_parser():
     parser.add_argument("--exp", type=int, required=True, help="How many times do you want to run the exercise")
     parser.add_argument("--log_path", type=str, help="Where you want to store the logs")
     parser.add_argument("--tuning", type=int, help="How many times you want to tune the hyperparameters")
+    parser.add_argument("--ddp", action="store_true", default=False, help="Use Distributed Data Parallelism")
     args = parser.parse_args()
 
     cuda_num = args.cuda_num
@@ -264,20 +265,26 @@ def set_arg_parser():
     exp_times = args.exp
     log_path = args.log_path
     is_tuning = args.tuning
+    ddp = args.ddp
 
-    return cuda_num, dataset_decision, model_decision, task_type, exp_times, log_path, is_tuning
+    return cuda_num, dataset_decision, model_decision, task_type, exp_times, log_path, is_tuning, ddp
 
 
 class CustomFormatter(logging.Formatter):
+    """Custom formatter to include the current GPU in log messages with colors."""
 
+    # ANSI color codes
     blue = "\x1b[34;20m"
     green = "\x1b[32;20m"
     yellow = "\x1b[33;20m"
     red = "\x1b[31;20m"
     bold_red = "\x1b[31;1m"
     reset = "\x1b[0m"
-    format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
 
+    # Log format with GPU info
+    format = "%(asctime)s - %(gpu_info)s - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
+
+    # Different colors for different log levels
     FORMATS = {
         logging.DEBUG: green + format + reset,
         logging.INFO: blue + format + reset,
@@ -287,25 +294,44 @@ class CustomFormatter(logging.Formatter):
     }
 
     def format(self, record):
+        # Get current GPU info
+        if torch.cuda.is_available():
+            gpu_id = torch.cuda.current_device()
+            gpu_name = torch.cuda.get_device_name(gpu_id)
+            record.gpu_info = f"GPU: {gpu_id} ({gpu_name})"
+        else:
+            record.gpu_info = "GPU: CPU"
+
+        # Select the appropriate format based on log level
         log_fmt = self.FORMATS.get(record.levelno)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 
-def get_logger(name, log_path):
+def get_logger():
+    """Sets up the logger with GPU info and color-coded formatting."""
+    with open("global_settings.json", "r") as file:
+        loaded_data = json.load(file)
+
+    logger_settings = loaded_data["logger"]
+    name = logger_settings["model"]
+    log_path = logger_settings["log_path"]
 
     logger = logging.getLogger(name)
-    logging.basicConfig(
-        filename=log_path,
-        level=logging.DEBUG,
-        format="%(asctime)s - %(levelname)s - %(message)s"
-    )
 
-    # create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
+    # ✅ Check if handlers already exist (to prevent duplication)
+    if not logger.handlers:
+        # File handler (logs to file)
+        file_handler = logging.FileHandler(log_path)
+        file_handler.setFormatter(CustomFormatter())
 
-    ch.setFormatter(CustomFormatter())
+        # Console handler (prints to console)
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(CustomFormatter())
 
-    logger.addHandler(ch)
+        # Add handlers to logger
+        logger.addHandler(file_handler)
+        logger.addHandler(console_handler)
+
+        logger.setLevel(logging.DEBUG)
 
     return logger
