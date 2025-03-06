@@ -4,6 +4,7 @@ from data_loader import get_training_data
 import warnings
 from datetime import datetime
 from torch_geometric.loader import NeighborLoader
+from torch.utils.data.distributed import DistributedSampler
 import torch.distributed as dist
 import os
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -156,27 +157,62 @@ def run_classification_with_SGC(rank, world_size, dataset_choice, config, return
     data = get_training_data(dataset_choice)
 
     if is_large:
-        train_loader = NeighborLoader(
-            data,
-            num_neighbors=[10, 10],  # Sample 10 neighbors per layer
-            batch_size=batch_size_train,
-            input_nodes=data.train_mask
-        )
+        if ddp:
+            train_sampler = DistributedSampler(
+                data.train_mask.nonzero().squeeze(),  # Get only training indices
+                num_replicas=world_size,
+                rank=rank,
+                shuffle=True
+            )
 
-        test_loader = NeighborLoader(
-            data,
-            num_neighbors=[10, 10],
-            batch_size=batch_size_test,
-            input_nodes=data.test_mask
-        )
+            test_sampler = DistributedSampler(
+                data.test_mask.nonzero().squeeze(),  # Get only test indices
+                num_replicas=world_size,
+                rank=rank,
+                shuffle=False
+            )
+
+            train_loader = NeighborLoader(
+                data,
+                num_neighbors=[10, 10],  # Sample 10 neighbors per layer
+                batch_size=batch_size_train,
+                input_nodes=data.train_mask,
+                sampler=train_sampler  # Ensure each GPU only gets a part of the dataset
+            )
+
+            test_loader = NeighborLoader(
+                data,
+                num_neighbors=[10, 10],
+                batch_size=batch_size_test,
+                input_nodes=data.test_mask,
+                sampler=test_sampler  # Ensure correct test distribution
+            )
+        else:
+            train_loader = NeighborLoader(
+                data,
+                num_neighbors=[10, 10],  # Sample 10 neighbors per layer
+                batch_size=batch_size_train,
+                input_nodes=data.train_mask
+            )
+
+            test_loader = NeighborLoader(
+                data,
+                num_neighbors=[10, 10],
+                batch_size=batch_size_test,
+                input_nodes=data.test_mask
+            )
     else:
         train_loader = None
         test_loader = None
 
-    data = data.to(device)
+    if is_large:
+        pass
+    else:
+        data = data.to(device)
+
     model = SGC(data).to(device)
     if ddp:
-        model = DDP(model, device_ids=[rank])
+        model = DDP(model, device_ids=[rank], output_device=rank)
 
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
