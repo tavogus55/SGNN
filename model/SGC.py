@@ -56,7 +56,7 @@ def evaluate(model, device, data, test_loader=None, dataset_name=''):
         with torch.no_grad():
             for batch in test_loader:
                 batch = batch.to(device)
-                out = model(batch.x, batch.edge_index)
+                out = model(batch)
                 pred = out.argmax(dim=1)
                 if dataset_name == 'Arxiv' or dataset_name == 'Mag' or dataset_name == 'Products':
                     correct += (pred == batch.y).sum().item()
