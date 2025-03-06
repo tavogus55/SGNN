@@ -318,7 +318,7 @@ def get_logger():
 
     logger = logging.getLogger(name)
 
-    # ✅ Check if handlers already exist (to prevent duplication)
+    # Check if handlers already exist (to prevent duplication)
     if not logger.handlers:
         # File handler (logs to file)
         file_handler = logging.FileHandler(log_path)
@@ -333,5 +333,7 @@ def get_logger():
         logger.addHandler(console_handler)
 
         logger.setLevel(logging.DEBUG)
+        # Prevent duplicate logging by stopping propagation to the root logger.
+        logger.propagate = False
 
     return logger
