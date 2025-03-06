@@ -333,7 +333,9 @@ def get_logger():
         logger.addHandler(console_handler)
 
         logger.setLevel(logging.DEBUG)
-        # Prevent duplicate logging by stopping propagation to the root logger.
-        logger.propagate = False
 
     return logger
+
+def get_ddp_setting():
+    with open("global_settings.json", "r") as file:
+        return json.load(file)["ddp"]

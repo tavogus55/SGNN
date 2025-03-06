@@ -8,7 +8,8 @@ import scipy.sparse as sp
 import math
 import scipy.io as scio
 # from gat import GraphAttentionLayer
-
+from torch.nn.parallel import DistributedDataParallel as DDP
+from utils import get_ddp_setting
 
 RIDGE = 0
 LASSO = 1
@@ -457,12 +458,13 @@ class SingleLayerEmbeddingGCN(SingleLayerGNN):
 class StackedGNN:
     def __init__(self, content, adjacency, layers,
                  overlooked_rates=None, eta=1, BP_count=0,
-                 device=None, labels=None, metric_func=None, logger=None):
+                 device=None, labels=None, metric_func=None, logger=None, rank=None):
         # super(StackedGAE, self).__init__()
         self.adjacency = adjacency
         # remove self-loop
         self._remove_self_loop()
         self.logger = logger
+        self.rank = rank
         self.layers = layers
         self.gnn_count = len(self.layers)
         self.eta = eta
@@ -500,7 +502,12 @@ class StackedGNN:
             elif layer_param.gnn_type is LayerParam.EGCN:
                 gnn = self._build_supervised_EGCN(input_dim, layer_param, overlooked_rate)
             assert gnn is not None
-            self.gnns.append(gnn)
+
+            ddp = get_ddp_setting()
+            if ddp:
+                self.gnns.append(DDP(gnn, device_ids=[self.rank], output_device=self.rank))
+            else:
+                self.gnns.append(gnn)
             input_dim = layer_param.neurons
 
     def _build_unsupervised_GNN(self, input_dim, layer_param, overlooked_rate=0.0):
@@ -555,8 +562,9 @@ class StackedGNN:
             gnn = self.gnns[i]
             embedding_target = None 
             if appro_target and i < self.gnn_count - 1:
-                embedding_target = self.gnns[i + 1].expected_X
-            gnn.set_training_direction(False, reset_backward=(i != 0))
+                embedding_target = self.gnns[i + 1].module.expected_X if get_ddp_setting() else self.gnns[i + 1].expected_X
+            gnn.module.set_training_direction(False, reset_backward=(i != 0)) if get_ddp_setting() \
+                else gnn.set_training_direction(False, reset_backward=(i != 0))
             # gnn.set_training_direction(False, reset_backward=False)
             # eta /= 2
             # input_content = gnn.run(input_content, mask_rate, embedding_target=embedding_target, eta=eta)
@@ -570,11 +578,12 @@ class StackedGNN:
             input_content = input_contents[i]
             self.logger.debug('---------------- Start training the {}-th GNN (BACKWARD)'.format(i))
             gnn = self.gnns[i]
-            gnn.set_training_direction(True if i != 0 else False)
+            gnn.module.set_training_direction(True if i != 0 else False) if get_ddp_setting() \
+                else gnn.set_training_direction(True if i != 0 else False)
             self.train_single_gnn(gnn, input_content, embedding_target=embedding_target)
 
             # eta *= 2
-            embedding_target = gnn.expected_X
+            embedding_target = gnn.module.expected_X if get_ddp_setting() else gnn.expected_X
             assert embedding_target.requires_grad is False
 
     def can_invoke_metric_function(self):
@@ -590,7 +599,9 @@ class StackedGNN:
         return self.metric_func(inputA.cpu().detach().numpy(), inputB)
 
     def train_single_gnn(self, gnn, input_content, embedding_target=None, train=True):
-        return gnn.run(input_content, embedding_target=embedding_target, eta=self.eta, train=train)
+        return gnn.module.run(input_content, embedding_target=embedding_target, eta=self.eta, train=train) \
+            if get_ddp_setting() else\
+            gnn.run(input_content, embedding_target=embedding_target, eta=self.eta, train=train)
 
     def save_embedding(self, input_contents, embedding, file_name=None):
         save_embed = {}
@@ -604,14 +615,14 @@ class StackedGNN:
 class SupervisedStackedGNN(StackedGNN):
     def __init__(self, content, adjacency, layers, training_mask, val_mask=None,
                  labels=None, overlooked_rates=None, eta=1,
-                 BP_count=0, device=None,  metric_func=None, logger=None):
+                 BP_count=0, device=None,  metric_func=None, logger=None, rank=None):
         assert labels is not None
         self.training_mask = training_mask
         self.val_mask = val_mask if val_mask is not None else self.training_mask
 
         super().__init__(content, adjacency, layers,
                          overlooked_rates=overlooked_rates, eta=eta, BP_count=BP_count,
-                         device=device, labels=labels, metric_func=metric_func, logger=logger)
+                         device=device, labels=labels, metric_func=metric_func, logger=logger, rank=rank)
 
     def _build_supervised_GNN(self, input_dim, layer_param, overlooked_rate=0.0):
         # overlooked_rate: Not implement for GCN
@@ -643,13 +654,13 @@ class SupervisedStackedGNN(StackedGNN):
 
     def invoke_metric_function(self, inputA, inputB):
         gnn = self.gnns[-1]
-        prediction = gnn.predict(inputA)
+        prediction = gnn.module.predict(inputA) if get_ddp_setting() else gnn.predict(inputA)
         return self.metric_func(prediction.cpu().detach().numpy(), inputB, self.val_mask, logger=self.logger, debug=True)
 
     def run(self):
         embedding = super().run()
         gnn = self.gnns[-1]
-        prediction = gnn.predict(embedding)
+        prediction = gnn.module.predict(embedding) if get_ddp_setting() else gnn.predict(embedding)
         return prediction.cpu().detach().numpy()
 
 

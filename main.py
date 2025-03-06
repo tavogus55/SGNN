@@ -35,8 +35,15 @@ def run_experiment(cuda_num, exp_times, config, dataset_decision, model_decision
             nmi_list.append(nmi)
         elif task_type == 'Classification':
             if model_decision == 'SGNN':
-                accuracy, efficiency, time_taken = run_classificaton_with_SGNN(cuda_num, dataset_decision, config,
-                                                                               logger=logger)
+                if is_DDP:
+                    mp.spawn(run_classificaton_with_SGNN, args=(world_size, dataset_decision, config,
+                                                                return_queue),
+                             nprocs=world_size, join=True)
+                    accuracy, efficiency, time_taken = return_queue.get()
+                else:
+                    accuracy, efficiency, time_taken = run_classificaton_with_SGNN(world_size, cuda_num,
+                                                                                   dataset_decision, config,
+                                                                                   return_queue)
             elif model_decision == 'SGC':
                 if is_DDP:
                     mp.spawn(run_classification_with_SGC, args=(world_size, dataset_decision, config,
@@ -136,6 +143,7 @@ if __name__ == "__main__":
     logger.info(f"CUDA version: {torch.version.cuda}")  # Check the CUDA version supported by PyTorch
     logger.info(f"CUDA active: {torch.cuda.is_available()}")  # Check if CUDA is detected
     logger.info(f"Pytorch version: {torch.version.__version__}")  # Check PyTorch version
+    logger.info(f"DDP: {ddp}")  # Check PyTorch version
 
 
 

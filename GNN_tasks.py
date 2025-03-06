@@ -9,13 +9,20 @@ import torch.distributed as dist
 import os
 from torch.nn.parallel import DistributedDataParallel as DDP
 import json
-from utils import get_logger
+from utils import get_logger, get_ddp_setting
 
 warnings.filterwarnings('ignore')
 utils.set_seed(0)
 
 
-def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
+def run_classificaton_with_SGNN(rank, world_size, dataset_choice, config, return_queue):
+
+    ddp = get_ddp_setting()
+
+    if ddp:
+        ddp_setup(rank, world_size)
+
+    logger = get_logger()
 
     start_time = datetime.now()
 
@@ -33,7 +40,15 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
             and dataset_choice != "Yelp"):
         features = features.to_dense()
     features = torch.Tensor(features)
-    device = torch.device(f"cuda:{cuda_num}" if torch.cuda.is_available() else "cpu")
+
+    if torch.cuda.is_available():
+        if ddp:
+            device = torch.device(f"cuda:{rank}")
+        else:
+            device = torch.device(f"cuda:0")
+        torch.cuda.set_device(device)
+    else:
+        device = torch.device(f"cpu")
 
     # ========== training setting ==========
     eta = config["eta"]
@@ -79,22 +94,30 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
                                 training_mask=train_mask, val_mask=test_mask,
                                 overlooked_rates=overlook_rates,
                                 BP_count=BP_count, eta=eta, device=device,
-                                labels=labels, metric_func=utils.classification, logger=logger)
+                                labels=labels, metric_func=utils.classification, logger=logger, rank=rank)
 
-    utils.print_SGNN_info(sgnn, logger=logger)
+    if ddp and rank == 0 or not ddp:
+        utils.print_SGNN_info(sgnn, logger=logger)
 
     logger.debug('============ Start Training ============')
     prediction = sgnn.run()
     logger.debug('============ End Training ============')
 
-    # ========== Testing ==========
-    logger.info('============ Start testing ============')
-    logger.info("Training accuracy")
-    utils.classification(prediction, labels, train_mask, logger=logger)
-    logger.info("Validation accuracy")
-    utils.classification(prediction, labels, val_mask, logger=logger)
-    logger.info("Test accuracy")
-    accuracy = utils.classification(prediction, labels, test_mask, logger=logger)
+    if ddp:
+        dist.barrier()
+
+    if ddp and rank == 0 or not ddp:
+
+        # ========== Testing ==========
+        logger.info('============ Start testing ============')
+        logger.info("Training accuracy")
+        utils.classification(prediction, labels, train_mask, logger=logger)
+        logger.info("Validation accuracy")
+        utils.classification(prediction, labels, val_mask, logger=logger)
+        logger.info("Test accuracy")
+        accuracy = utils.classification(prediction, labels, test_mask, logger=logger)
+
+
     finish_time = datetime.now()
 
     time_difference = finish_time - start_time
@@ -116,21 +139,22 @@ def run_classificaton_with_SGNN(cuda_num, dataset_choice, config, logger=None):
     efficiency = total_seconds / total_iterations
     logger.info(f"Official efficiency: {efficiency}")
 
-    return accuracy, efficiency, total_seconds
+    if ddp:
+        if rank == 0:
+            return_queue.put((accuracy, efficiency, total_seconds))
+
+        dist.destroy_process_group()
+    else:
+        return accuracy, efficiency, total_seconds
 
 
 def run_classification_with_SGC(rank, world_size, dataset_choice, config, return_queue):
 
     accuracy = None
-
-    with open("global_settings.json", "r") as file:
-        ddp = json.load(file)["ddp"]
+    ddp = get_ddp_setting()
 
     if ddp:
-        """Train function for distributed training"""
-        os.environ["MASTER_ADDR"] = "localhost"
-        os.environ["MASTER_PORT"] = "12355"
-        dist.init_process_group("nccl", rank=rank, world_size=world_size)
+        ddp_setup(rank, world_size)
 
     start_time = datetime.now()
     is_large = config["isLarge"]
@@ -381,3 +405,9 @@ def get_activation(current_layer_activation):
         exit()
 
     return chosen_activation
+
+def ddp_setup(rank, world_size):
+    """Train function for distributed training"""
+    os.environ["MASTER_ADDR"] = "localhost"
+    os.environ["MASTER_PORT"] = "12355"
+    dist.init_process_group("nccl", rank=rank, world_size=world_size)
