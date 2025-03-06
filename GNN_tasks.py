@@ -142,12 +142,14 @@ def run_classification_with_SGC(rank, world_size, dataset_choice, config, return
     learning_rate = config["learning_rate"]
     weight_decay = config["weight_decay"]
 
-    if ddp:
-        device = torch.device(f"cuda:{rank}" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.is_available():
+        if ddp:
+            device = torch.device(f"cuda:{rank}")
+        else:
+            device = torch.device(f"cuda:0")
+        torch.cuda.set_device(device)
     else:
-        device = torch.device(f"cuda:0" if torch.cuda.is_available() else "cpu")
-
-    torch.cuda.set_device(device)
+        device = torch.device(f"cpu")
 
     logger = get_logger()
 
