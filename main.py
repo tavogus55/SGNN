@@ -125,7 +125,9 @@ if __name__ == "__main__":
     logger_settings = {
         "logger": {
             "model": model_decision,
-            "log_path": logPath
+            "log_path": logPath,
+            "dataset": dataset_decision,
+
         },
         "ddp": ddp
     }

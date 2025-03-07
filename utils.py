@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import random
 import torch
@@ -313,10 +315,18 @@ def get_logger():
         loaded_data = json.load(file)
 
     logger_settings = loaded_data["logger"]
-    name = logger_settings["model"]
+    model = logger_settings["model"]
     log_path = logger_settings["log_path"]
+    dataset_name = logger_settings["dataset"]
 
-    logger = logging.getLogger(name)
+    if log_path == "local":
+        logs_dir = os.path.join(os.getcwd(), "logs")
+        if not os.path.exists(logs_dir):
+            os.makedirs(logs_dir)
+
+    log_path = f"{logs_dir}//{model}_{dataset_name}.log"
+
+    logger = logging.getLogger(model)
 
     # Check if handlers already exist (to prevent duplication)
     if not logger.handlers:
