@@ -8,7 +8,6 @@ from torch.utils.data.distributed import DistributedSampler
 import torch.distributed as dist
 import os
 from torch.nn.parallel import DistributedDataParallel as DDP
-import json
 from utils import get_logger, get_ddp_setting
 
 warnings.filterwarnings('ignore')
@@ -16,6 +15,8 @@ utils.set_seed(0)
 
 
 def run_classificaton_with_SGNN(rank, world_size, dataset_choice, config, return_queue):
+
+    accuracy = None
 
     ddp = get_ddp_setting()
 
@@ -82,7 +83,7 @@ def run_classificaton_with_SGNN(rank, world_size, dataset_choice, config, return
                                       gnn_type=LayerParam.EGCN,
                                       learning_rate=layer["learning_rate"],
                                       order=layer["order"], max_iter=layer["max_iter"],
-                                      lam=lam,batch_size=layer["batch_size"])
+                                      lam=lam, batch_size=layer["batch_size"])
 
         layers.append(layer_to_add)
         layer_number = layer_number + 1
@@ -116,7 +117,6 @@ def run_classificaton_with_SGNN(rank, world_size, dataset_choice, config, return
         utils.classification(prediction, labels, val_mask, logger=logger)
         logger.info("Test accuracy")
         accuracy = utils.classification(prediction, labels, test_mask, logger=logger)
-
 
     finish_time = datetime.now()
 
@@ -254,9 +254,6 @@ def run_classification_with_SGC(rank, world_size, dataset_choice, config, return
     else:
         accuracy = evaluate(model, device, data, test_loader=test_loader, dataset_name=dataset_choice)
         logger.info(f"Test Accuracy: {accuracy:.4f}")
-
-
-
 
     finish_time = datetime.now()
     time_difference = finish_time - start_time
